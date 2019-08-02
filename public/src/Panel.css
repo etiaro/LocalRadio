@@ -1,0 +1,18 @@
+body{
+    background-color: #FFFFFF;
+    background-image: none;
+}
+#addPaper{
+    text-align: center;
+    padding: 1em;
+    padding-top: 3.5em;
+    width: fit-content;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 10em;
+    margin: auto;
+
+    height: fit-content;
+}

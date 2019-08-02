@@ -1,0 +1,15 @@
+body{
+    background-image: url('Loginbg.jpg');
+    background-size: 100vw 100vh;
+}
+
+#Cont{
+    padding-top: 30vh;
+    width: 30em;
+}
+#Paper{
+    padding: 1em;
+    padding-top:5em;
+    text-align: center;
+    height: 10em;
+}
