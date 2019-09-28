@@ -13,7 +13,7 @@ function getUserData(){
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
     xmlHttp.send(null);
     return xmlHttp.responseText;
-}
+}//TODO getStatusData
 
 
 function login(response){
@@ -65,6 +65,14 @@ function stopSong(fileName){
     console.log(xmlHttp.responseText);
     return false;
 }
+function findSong(songData){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "POST", "http://localhost:80/api/player/list", false ); // false for synchronous request
+    xmlHttp.setRequestHeader("Content-Type", "application/json");
+    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.send(JSON.stringify(songData));
+    return JSON.parse(xmlHttp.responseText).result;
+}
 
 function changePage(){
     var userData = JSON.parse(getUserData());
@@ -74,7 +82,29 @@ function changePage(){
     }else if(userData.isAdmin){
         ReactDOM.render(<Panel userData={JSON.stringify(userData)}/>, document.getElementById('root'));
     }
-    
 }
 
-export {getUserData, changePage, login as apiLogin, downloadSong, playSong, startShuffle, stopSong};
+function notificationHandler(callback){
+    setTimeout(()=>{
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open( "GET", "http://localhost:80/api/notification/");
+        xmlHttp.setRequestHeader("Content-Type", "application/json");
+        xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+        xmlHttp.timeout = 30000;
+        xmlHttp.onload = function () {
+            try{
+                callback(JSON.parse(xmlHttp.responseText));
+                notificationHandler(callback);
+            }catch(e){
+                console.log(xmlHttp.statusText);
+            }
+          };
+        xmlHttp.onerror = function (e) {
+            notificationHandler(callback);
+            console.error(xmlHttp.statusText);
+          };
+        xmlHttp.send(null);
+    }, 1);
+}
+
+export {getUserData, changePage, login as apiLogin, findSong, downloadSong, playSong, startShuffle, stopSong, notificationHandler};

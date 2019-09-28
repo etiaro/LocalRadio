@@ -9,6 +9,11 @@ export default () => {
     const api = Router();
 
     // /api/player
+    api.post('/list', checkPerm, (req, res, next) => {
+        player.findSong(req.body.songData, (result)=>{
+            res.status(200).send({msg: "query accepted", result: result});
+        });
+    });
     api.post('/play', checkPerm, (req, res, next) => { 
         if(req.body.shuffle){
             player.playShuffle();

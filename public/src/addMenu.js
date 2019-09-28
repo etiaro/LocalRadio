@@ -1,9 +1,5 @@
 import React from 'react';
-import clsx from 'clsx';
-
-import {downloadSong} from './ApiConnection';
-
-import { makeStyles } from '@material-ui/core/styles';
+import { downloadSong } from './ApiConnection';
 import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
@@ -12,75 +8,66 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import IconButton from '@material-ui/core/IconButton';
 import { Close as CloseIcon } from '@material-ui/icons';
+import { styled } from '@material-ui/core/styles';
 
 
-
-const useStyles = makeStyles(theme => ({
-    textField: {
-      marginLeft: theme.spacing(1),
-      marginRight: theme.spacing(1),
-      width: 400
-    },
-    button: {
-      margin: theme.spacing(1),
-    },
-    appBar: {
-        position:"absolute",
-        top:0,
-        fontSize: "large"
-    },
-    close:{
-        position:"absolute",
-        right: 0,
-        top: 0
-    }
-}));
-
-export default function MusicToolbar(props) {
-    const classes = useStyles();
-    var style = {
-        display: "none"
-    }
-
-    var url = "URL";
-    function handleURLChange(e){
-        url = e.target.value;
-    }
-
-    function downloadCall(url){
-        downloadSong(url);
-        props.close()
-    }
-    const [value, setValue] = React.useState(0);
-    
-    function handleChange(event, newValue) {
-      setValue(newValue);
+const DownloadBtn = styled(Button)({
+});
+const UrlInput = styled(TextField)({
+    width: 400
+});
+const TabBar = styled(AppBar)({
+    position:"absolute",
+    top:0,
+    fontSize: "large"
+});
+const CloseBtn = styled(IconButton)({
+    position:"absolute",
+    right: 0,
+    top: 0
+});
+        
+export default class AddMenu extends React.Component {
+    constructor(props){
+        super(props);
+        this.state={
+            url: "",
+            tab: 0
+        }
     }
     
-    if(props.isVisible)
-        style.display = "block";
-    return (
-        <Paper id="addPaper" elevation={2} square={true} style={style}>
-            <AppBar className={classes.appBar}>
+    
+    handleURLChange(e) {
+        this.setState({url: e.target.value});
+    }
+    downloadCall() {
+        downloadSong(this.state.url);
+        this.setState({url: ""});
+        this.props.close();
+    }
+    handleChange(event, newValue) {
+        this.setState({tab: newValue});
+    }
+    render(){
+        let style = {display: 'none'};
+        if(this.props.isVisible)
+            style = {display: 'block'};
+
+        return (<Paper id="addPaper" elevation={2} square={true} style={style}>
+            <TabBar>
                 <p>Dodawanie Ścieżki</p>
-                <IconButton color="inherit" onClick={()=>props.close()}  className={classes.close} >
+                <CloseBtn color="inherit" onClick={() => this.props.close()}>
                     <CloseIcon />
-                </IconButton>
-            </AppBar>
-            <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
-                    <Tab label="Youtube" id="YT" aria-controls="youtube-tab" />
-                </Tabs>
-            <TextField
-                id="standard-dense"
-                label={"URL"}
-                className={clsx(classes.textField, classes.dense)}
-                margin="dense"
-                onChange={handleURLChange} 
-            />
+                </CloseBtn>
+            </TabBar>
+            <Tabs value={this.state.tab} onChange={(e, n)=>this.handleChange(e, n)} aria-label="download method tabs">
+                <Tab label="Youtube" id="YT" aria-controls="youtube-tab" />
+            </Tabs>
+            <UrlInput id="standard-dense" label={"URL"}  margin="dense" onChange={(e)=>this.handleURLChange(e)} value={this.state.url} />
             <p>Enter URL of video or playlist</p>
-            <Button variant="contained" color="primary" onClick={()=>{downloadCall(url)}} className={classes.button}>
+            <DownloadBtn variant="contained" color="primary" onClick={() => { this.downloadCall(); }}>
                 Download
-            </Button>
-        </Paper>
-    );
+            </DownloadBtn>
+        </Paper>);
+    }
 }

@@ -16,3 +16,8 @@ body{
 
     height: fit-content;
 }
+
+.Library{
+    overflow: scroll;
+    height: 95vh;
+}

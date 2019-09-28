@@ -3,6 +3,7 @@ import {database} from "../database/database";
 import youtubeInfo from "youtube-info";
 import p from 'play-sound';
 import fs from 'fs';
+import {notification} from './notification';
 
 
 const pl = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
@@ -37,7 +38,7 @@ export const player = Object.assign({}, {
     shuffleTimeout: null,
     playSong(fileName){
         this.stopPlaying();
-        audio = this.p.play('./Music/'+fileName, function(err){
+        this.audio = this.p.play('./Music/'+fileName, function(err){
             if (err) throw err;
         });
     },
@@ -65,6 +66,7 @@ export const player = Object.assign({}, {
         database.getSong(ytid, (res)=>{
             if(res){
                 console.log("Video already downloaded to "+res.file);
+                notification.notify({msg: 'Skipping '+ ytid + ' - already downloaded'});
                 if(callback) callback();
                 return;
             }
@@ -88,9 +90,11 @@ export const player = Object.assign({}, {
             YD.on("error", function(error) {
                 if(callback) callback();
                 console.log(error);
+                notification.notify({msg: 'error while downloading '+ytid});
             });
             YD.on("progress", function(progress) {
                 console.log(JSON.stringify(progress));
+                //notification.notify({msg: 'Downloading '+ytid+', '+Math.round(progress.progress.percentage)+'%'});
             });
             YD.on("finished", function(err, data) {
                 youtubeInfo(ytid, (err, i)=>{
@@ -100,6 +104,7 @@ export const player = Object.assign({}, {
                         return;
                     }
                     console.log("Finished downloading "+i.title+" to "+song.file);
+                    notification.notify({msg: 'Successfully downloaded '+i.title});
                     song.name = i.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                     song.author = i.owner.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                     song.length = i.duration;
@@ -118,5 +123,8 @@ export const player = Object.assign({}, {
             if(i < ytids.length)
                 f(ytids[i], next);
         }
+    },
+    findSong(songData, cb){
+        database.findSong(songData, cb);
     }
 });

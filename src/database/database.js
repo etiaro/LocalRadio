@@ -23,8 +23,8 @@ export const database = Object.assign({}, {
               console.log("Error while database connecting:",err);
               setTimeout(()=>database.init(cfg), 2000);
             }else{
-              console.log("connected to database");
-              database.validateAndFix();
+              console.log("connected to database"); 
+              database.validateAndFix(cfg);
             }
         });
         this.con.on('error', function(err) {
@@ -36,16 +36,38 @@ export const database = Object.assign({}, {
             }
         });
     },
-    async validateAndFix(){
+    async validateAndFix(cfg){
       console.log("Database validation...");
-      await this.con.query("SELECT * FROM information_schema.tables WHERE table_schema = 'cHfwxvHR04' AND table_name = 'users' LIMIT 1;",
+      await this.con.query("SELECT * FROM information_schema.tables WHERE table_schema = '"+cfg.database+"' AND table_name = 'users' LIMIT 1;",
         (err, result, fields) => {
           if(err) console.log(err);
           else{
-            //TODO validate and fix at all...
+            if(result.length == 0){
+              console.log("Users table not found, creating...");
+              this.con.query("CREATE TABLE `vFAJuE5WlU`.`users` ( `id` VARCHAR(30) NOT NULL , `name` VARCHAR(30) NOT NULL , `mail` VARCHAR(60) NOT NULL , `picture` VARCHAR(150) NOT NULL , `isAdmin` BOOLEAN NOT NULL  DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
+              (err, result, fields)=>{
+                if(err) console.log(err)
+                else  console.log('Created table users');
+              });
+            }
           }
       });
+      await this.con.query("SELECT * FROM information_schema.tables WHERE table_schema = '"+cfg.database+"' AND table_name = 'songs' LIMIT 1;",
+      (err, result, fields) => {
+        if(err) console.log(err);
+        else{
+          if(result.length == 0){
+            console.log("Songs table not found, creating...");
+            this.con.query("CREATE TABLE `vFAJuE5WlU`.`songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(30) NOT NULL , `file` VARCHAR(30) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;",
+            (err, result, fields)=>{
+              if(err) console.log(err)
+              else  console.log('Created table songs');
+            });
+          }
+        } 
+    });
 
+      
       console.log("Database validation done");
     },
     getUser(userId, cb){
@@ -97,23 +119,27 @@ export const database = Object.assign({}, {
       });
     },
     findSong(songData, cb){
-      if(songData.ytid){
-        this.con.query("SELECT * FROM `songs` WHERE `ytid`='"+songData.ytid+"'",
-        (err, result, fields) => {
-          if(err) console.log(err);
-          else{
-            cb(result[0]);
-          }
-        });
-      }else if(songData.name){
-        this.con.query("SELECT * FROM `songs` WHERE `name` LIKE '%{"+songData.name+"}%'",
-        (err, result, fields) => {
-          if(err) console.log(err);
-          else{
-            cb(result[0]);
-          }
-        });
+      var query = "SELECT * FROM `songs` ";
+      if(songData){
+        if(songData.ytid)
+          query+="WHERE `ytid`='"+songData.ytid+"' ";
+        if(songData.name)
+          query+= "WHERE `name` LIKE '%"+songData.name+"%' OR `author` LIKE '%"+songData.name+"%' ";
+        query+="ORDER BY `name` ";
+        if(songData.site)
+          query+= "LIMIT "+30*songData.site+" ";
+        else
+          query+= "LIMIT 30 ";
+
       }else
-        cb(null);
+        query += " ORDER BY `name` LIMIT 30;";
+      
+      this.con.query(query,
+        (err, result, fields) => {
+          if(err) console.log(err);
+          else{
+            cb(result);
+          }
+      });
     }
 });
