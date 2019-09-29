@@ -7,7 +7,7 @@ import Library from "./Library";
 import Notifications from "./Notifications";
 
 
-import {notificationHandler} from './ApiConnection';
+import {notificationHandler, getPlayerData} from './ApiConnection';
 
 export default class Panel extends React.Component{
     constructor(props){
@@ -19,7 +19,8 @@ export default class Panel extends React.Component{
             isAddWindowVisible: false,
             tab: 0,
             notifications: [],
-            notificationsTimeout: 5000
+            notificationsTimeout: 5000,
+            playerData: getPlayerData()
         };
     }
 
@@ -34,6 +35,8 @@ export default class Panel extends React.Component{
                 tmp.shift();
                 this.setState({});
             }, this.state.notificationsTimeout)
+        }, (data)=>{
+            this.setState({playerData:data});
         });
     }
     changePlaying(){
@@ -57,7 +60,7 @@ export default class Panel extends React.Component{
                 <Library />
                 <Notifications notifications={this.state.notifications}/>
                 <AddMenu isVisible={this.state.isAddWindowVisible} close={()=>{this.setState({isAddWindowVisible:false})}}/>
-                <Toolbar changePlaying={()=>this.changePlaying()} isPlaying={this.state.isPlaying} addWindowSwitch={()=>{this.addWindowSwitch()}}/>
+                <Toolbar playerData={this.state.playerData} addWindowSwitch={()=>{this.addWindowSwitch()}}/>
             </React.Fragment>
         );
     }

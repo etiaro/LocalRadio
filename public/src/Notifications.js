@@ -32,7 +32,7 @@ export default function Notifications(props) {
             {props.notifications.map(note => (
             <Paper key={i++} className={classes.root}>
                 <Typography component="p" className={classes.text}>
-                {note.msg}
+                {note}
                 </Typography>
             </Paper>
             ))}

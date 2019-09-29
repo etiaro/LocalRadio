@@ -36,31 +36,57 @@ export const player = Object.assign({}, {
     p: p({}),
     audio: null,
     shuffleTimeout: null,
-    playSong(fileName){
-        this.stopPlaying();
+    isPlaying: false,
+    isShuffle: false,
+    songInfo: {},
+    playSong(fileName, name, length){
+        this.clearLastPlay();
+        console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
         this.audio = this.p.play('./Music/'+fileName, function(err){
             if (err) throw err;
         });
+        player.songInfo.name = name;
+        player.isPlaying = true;
+        player.sendPlayerData();
+        player.shuffleTimeout = setTimeout(()=>{
+            player.isPlaying = false;
+            player.songInfo = {};
+            player.sendPlayerData();
+            player.nextShuffle();
+        }, length*1000);
+    },
+    nextShuffle(){
+        if(this.isShuffle){
+            this.isShuffle = true;
+            database.getRandomSong((song)=>{
+                player.playSong(song.file, song.name, song.length);
+            });
+        }
+    },
+    switchShuffle(){
+        this.isShuffle = !this.isShuffle;
+        this.sendPlayerData();
     },
     playShuffle(){
-        this.stopPlaying();
-        database.getRandomSong((song)=>{
-            console.log("playing "+song.name);
-            this.audio = this.p.play('./Music/'+song.file, function(err){
-                if (err) throw err;
-            });
-            this.shuffleTimeout = setTimeout(()=>{
-                player.playShuffle();
-            }, song.length*1000);
-        });
+        this.isShuffle = true;
+        if(!this.isPlaying)
+            this.nextShuffle();
     },
-    stopPlaying(){
-        if(this.audio)
+    clearLastPlay(){
+        if(this.audio){
             this.audio.kill();
-        if(this.shuffleTimeout){
+            this.audio = null;
+        }if(this.shuffleTimeout){
             clearTimeout(this.shuffleTimeout);
             this.shuffleTimeout = null;
         }
+        this.songInfo = {};
+    },
+    stopPlaying(){
+        this.clearLastPlay();
+        this.isPlaying = false;
+        this.isShuffle = false;
+        this.sendPlayerData();
     },
     downloadSong(ytid, callback){
         database.getSong(ytid, (res)=>{
@@ -126,5 +152,11 @@ export const player = Object.assign({}, {
     },
     findSong(songData, cb){
         database.findSong(songData, cb);
+    },
+    sendPlayerData(){
+        notification.notify({player: this.getInfo()});
+    },
+    getInfo(){
+        return {isPlaying: this.isPlaying, isShuffle: this.isShuffle, song: this.songInfo};
     }
 });

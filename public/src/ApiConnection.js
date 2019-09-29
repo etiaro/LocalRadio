@@ -6,9 +6,11 @@ import Cookies from 'universal-cookie';
 
 const cookies = new Cookies();
 
+const adress = "http://"+window.location.hostname+":80/api/";
+
 function getUserData(){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "POST", "http://localhost:80/api/login/data/", false ); // false for synchronous request
+    xmlHttp.open( "POST", adress+"login/data/", false ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
     xmlHttp.send(null);
@@ -18,7 +20,7 @@ function getUserData(){
 
 function login(response){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "POST", "http://localhost:80/api/login", false ); // false for synchronous request
+    xmlHttp.open( "POST", adress+"login", false ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xmlHttp.send("accessToken="+response.accessToken);
     if(xmlHttp.status === 200){
@@ -31,43 +33,42 @@ function login(response){
 
 function downloadSong(ytUrl){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "POST", "http://localhost:80/api/player/download", false ); // false for synchronous request
+    xmlHttp.open( "POST", adress+"player/download", false ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
     xmlHttp.send('{"url": "'+ytUrl+'"}');
-    console.log(xmlHttp.responseText);
     return false;
 }
-function playSong(fileName){
+function playSong(fileName, songName, length){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "POST", "http://localhost:80/api/player/play", false ); // false for synchronous request
+    xmlHttp.open( "POST", adress+"player/play", false ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
-    xmlHttp.send('{"fileName": "'+fileName+'"}');
-    console.log(xmlHttp.responseText);
+    xmlHttp.send(JSON.stringify({fileName:fileName, songName:songName, length:length}));
     return false;
 }
-function startShuffle(){
+function switchShuffle(play){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "POST", "http://localhost:80/api/player/play", false ); // false for synchronous request
+    xmlHttp.open( "POST", adress+"player/play", false ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
-    xmlHttp.send('{"shuffle": true}');
-    console.log(xmlHttp.responseText);
+    if(play)
+        xmlHttp.send('{"shufflePlay": true}');
+    else
+        xmlHttp.send('{"shuffleSwitch": true}');
     return false;
 }
 function stopSong(fileName){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "POST", "http://localhost:80/api/player/stop", false ); // false for synchronous request
+    xmlHttp.open( "POST", adress+"/player/stop", false ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
     xmlHttp.send(null);
-    console.log(xmlHttp.responseText);
     return false;
 }
 function findSong(songData){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "POST", "http://localhost:80/api/player/list", false ); // false for synchronous request
+    xmlHttp.open( "POST", adress+"player/list", false ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
     xmlHttp.send(JSON.stringify(songData));
@@ -84,27 +85,39 @@ function changePage(){
     }
 }
 
-function notificationHandler(callback){
+function getPlayerData(){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "POST", adress+"player/data/", false ); // false for synchronous request
+    xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.send(null);
+    return JSON.parse(xmlHttp.responseText);
+}
+function notificationHandler(callbackMsg, callbackPlayer){
     setTimeout(()=>{
         var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open( "GET", "http://localhost:80/api/notification/");
+        xmlHttp.open( "GET", adress+"notification/");
         xmlHttp.setRequestHeader("Content-Type", "application/json");
-        xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+        xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));
         xmlHttp.timeout = 30000;
         xmlHttp.onload = function () {
             try{
-                callback(JSON.parse(xmlHttp.responseText));
-                notificationHandler(callback);
+                const res = JSON.parse(xmlHttp.responseText);
+                if(res.msg)
+                    callbackMsg(res.msg);
+                if(res.player)
+                    callbackPlayer(res.player);
+                notificationHandler(callbackMsg, callbackPlayer);
             }catch(e){
                 console.log(xmlHttp.statusText);
             }
           };
         xmlHttp.onerror = function (e) {
-            notificationHandler(callback);
+            notificationHandler(callbackMsg, callbackPlayer);
             console.error(xmlHttp.statusText);
           };
         xmlHttp.send(null);
     }, 1);
 }
 
-export {getUserData, changePage, login as apiLogin, findSong, downloadSong, playSong, startShuffle, stopSong, notificationHandler};
+export {getUserData, changePage, login as apiLogin, findSong, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlayerData};

@@ -14,7 +14,7 @@ import { styled } from '@material-ui/core/styles';
 const DownloadBtn = styled(Button)({
 });
 const UrlInput = styled(TextField)({
-    width: 400
+    width: "calc(100vw - 3em)"
 });
 const TabBar = styled(AppBar)({
     position:"absolute",
@@ -51,7 +51,7 @@ export default class AddMenu extends React.Component {
     render(){
         let style = {display: 'none'};
         if(this.props.isVisible)
-            style = {display: 'block'};
+            style = {display: 'block', maxWidth: "calc(100vw - 2em)"};
 
         return (<Paper id="addPaper" elevation={2} square={true} style={style}>
             <TabBar>

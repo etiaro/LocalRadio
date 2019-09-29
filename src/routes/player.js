@@ -15,12 +15,17 @@ export default () => {
         });
     });
     api.post('/play', checkPerm, (req, res, next) => { 
-        if(req.body.shuffle){
+        console.log(req.body);
+        if(req.body.shufflePlay){
             player.playShuffle();
             return res.status(200).send({msg: "query accepted"});
         }
+        if(req.body.shuffleSwitch){
+            player.switchShuffle();
+            return res.status(200).send({msg: "query accepted"});
+        }
         if(req.body.fileName){
-            player.playSong(req.body.fileName);
+            player.playSong(req.body.fileName, req.body.songName, req.body.length);
             return res.status(200).send({msg: "query accepted"});
         }
         return res.status(500).send({msg: "Query denied. Give filename!"});
@@ -47,6 +52,9 @@ export default () => {
         }
         return res.status(500).send({msg: "Query denied. Give ytid!"});
     });
-    
+
+    api.post('/data/', checkPerm, (req, res, next)=>{
+      return res.status(200).send(player.getInfo());
+    })
     return api;
 }

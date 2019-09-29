@@ -36,12 +36,13 @@ const useStyles = makeStyles(theme => ({
     width: '100%'
   },
   texts:{
-    display: 'inline-block'
+    display: 'inline-block',
+    maxWidth: "calc(100% - 50px)"
   },
   button:{
       float: 'right',
       display: 'inline-block',
-      colot: theme.palette.primary
+      color: theme.palette.primary
   }
 }));
 
@@ -90,7 +91,7 @@ export default function Library(props) {
                     {translateTime(song.length)}
                     </Typography>
                 </div>
-                <IconButton className={classes.button} onClick={()=>playSong(song.file)}>
+                <IconButton className={classes.button} onClick={()=>playSong(song.file, song.name, song.length)}>
                     <PlayIcon/>
                 </IconButton>
             </ListItem>
