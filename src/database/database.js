@@ -65,9 +65,21 @@ export const database = Object.assign({}, {
             });
           }
         } 
-    });
-
-      
+      });
+      await this.con.query("SELECT * FROM information_schema.tables WHERE table_schema = '"+cfg.database+"' AND table_name = 'timeSchedule' LIMIT 1;",
+        (err, result, fields) => {
+          if(err) console.log(err);
+          else{
+            if(result.length == 0){
+              console.log("TimeSchedule table not found, creating..."); 
+              this.con.query("CREATE TABLE `vFAJuE5WlU`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
+              (err, result, fields)=>{
+                if(err) console.log(err)
+                else  console.log('Created table timeSchedule');
+              });
+            }
+          } 
+      });
       console.log("Database validation done");
     },
     getUser(userId, cb){
@@ -141,5 +153,44 @@ export const database = Object.assign({}, {
             cb(result);
           }
       });
+    },
+    getPlaylistData(){
+      //gets Playlist plans from now, sorted by date
+    },
+    modifyPlaylist(entry){
+      //modify or update entry
+    },
+    setAmplifierTimeSchedule(schedule, cb){
+      if(typeof schedule === "string")
+        schedule = JSON.parse(schedule);
+      if(!schedule.day)
+        schedule.day = [false, false, false, false, false, false, false];
+      if(!schedule.enabledTimees)
+        schedule.enabledTimes = [];
+      schedule = JSON.stringify(schedule);
+      
+      this.con.query("INSERT INTO `timeSchedule`(`data`) VALUES ('"+schedule+"')",
+        (err, result, fields) => {
+          if(err) 
+            console.log(err);
+          else
+            if(cb) cb(result);
+      });
+      //adds a record
+    },
+    getAmplifierTimeSchedule(cb){ 
+      this.con.query("SELECT * FROM `timeSchedule` ORDER BY `id` DESC LIMIT 1",
+        (err, result, fields) => {
+          if(err) 
+            console.log(err);
+          else
+            if(cb) cb(JSON.parse(result[0]));
+      });
+    },
+    getSettings(){
+
+    },
+    setSettings(){
+
     }
 });

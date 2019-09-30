@@ -60,7 +60,7 @@ function switchShuffle(play){
 }
 function stopSong(fileName){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "POST", adress+"/player/stop", false ); // false for synchronous request
+    xmlHttp.open( "POST", adress+"player/stop", false ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
     xmlHttp.send(null);

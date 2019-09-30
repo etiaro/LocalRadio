@@ -4,6 +4,7 @@ import youtubeInfo from "youtube-info";
 import p from 'play-sound';
 import fs from 'fs';
 import {notification} from './notification';
+import {amplifier} from './amplifier';
 
 
 const pl = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
@@ -68,7 +69,10 @@ export const player = Object.assign({}, {
         this.sendPlayerData();
     },
     playShuffle(){
-        this.isShuffle = true;
+        if(!this.isShuffle){
+            this.isShuffle = true;
+            this.sendPlayerData();
+        }
         if(!this.isPlaying)
             this.nextShuffle();
     },
@@ -157,6 +161,11 @@ export const player = Object.assign({}, {
         notification.notify({player: this.getInfo()});
     },
     getInfo(){
-        return {isPlaying: this.isPlaying, isShuffle: this.isShuffle, song: this.songInfo};
+        return {isPlaying: this.isPlaying, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode};
+    },
+
+    startPlaylistWatchman(){
+        amplifier.startWatchman();
+        //TODO interval with check DO I HAVE TO PLAY SOMETHING from first database result
     }
 });
