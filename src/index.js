@@ -21,15 +21,14 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-//NOT WORKING?!
-app.use(express.static(path.join(__dirname, 'public/build/')));
-app.use('/', express.static(path.join(__dirname, 'public/build/index.html')));
-
 // routes config
 app.use('/api/login', login());
 app.use('/api/player', player());
 app.use('/api/notification', notification());
 app.use('/api/settings', settings());
+
+//hosting built react app(front end)
+app.use(express.static(path.join(__dirname, '../public/build/')));
 
 // errors handling
 app.use(notFound);
