@@ -23,6 +23,10 @@ var _fs = require("fs");
 
 var _fs2 = _interopRequireDefault(_fs);
 
+var _notification = require("./notification");
+
+var _amplifier = require("./amplifier");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var pl = { _instance: null, get instance() {
@@ -66,37 +70,65 @@ var player = exports.player = Object.assign({}, {
     p: (0, _playSound2.default)({}),
     audio: null,
     shuffleTimeout: null,
-    playSong: function playSong(fileName) {
-        this.stopPlaying();
-        audio = this.p.play('./Music/' + fileName, function (err) {
+    isPlaying: false,
+    isShuffle: false,
+    songInfo: {},
+    playSong: function playSong(fileName, name, length) {
+        this.clearLastPlay();
+        console.log("playing " + name + " from " + fileName + " " + length + "seconds");
+        this.audio = this.p.play('./Music/' + fileName, function (err) {
             if (err) throw err;
         });
+        player.songInfo.name = name;
+        player.isPlaying = true;
+        player.sendPlayerData();
+        player.shuffleTimeout = setTimeout(function () {
+            player.isPlaying = false;
+            player.songInfo = {};
+            player.sendPlayerData();
+            player.nextShuffle();
+        }, length * 1000);
+    },
+    nextShuffle: function nextShuffle() {
+        if (this.isShuffle) {
+            this.isShuffle = true;
+            _database.database.getRandomSong(function (song) {
+                player.playSong(song.file, song.name, song.length);
+            });
+        }
+    },
+    switchShuffle: function switchShuffle() {
+        this.isShuffle = !this.isShuffle;
+        this.sendPlayerData();
     },
     playShuffle: function playShuffle() {
-        var _this = this;
-
-        this.stopPlaying();
-        _database.database.getRandomSong(function (song) {
-            console.log("playing " + song.name);
-            _this.audio = _this.p.play('./Music/' + song.file, function (err) {
-                if (err) throw err;
-            });
-            _this.shuffleTimeout = setTimeout(function () {
-                player.playShuffle();
-            }, song.length * 1000);
-        });
+        if (!this.isShuffle) {
+            this.isShuffle = true;
+            this.sendPlayerData();
+        }
+        if (!this.isPlaying) this.nextShuffle();
     },
-    stopPlaying: function stopPlaying() {
-        if (this.audio) this.audio.kill();
-        if (this.shuffleTimeout) {
+    clearLastPlay: function clearLastPlay() {
+        if (this.audio) {
+            this.audio.kill();
+            this.audio = null;
+        }if (this.shuffleTimeout) {
             clearTimeout(this.shuffleTimeout);
             this.shuffleTimeout = null;
         }
+        this.songInfo = {};
+    },
+    stopPlaying: function stopPlaying() {
+        this.clearLastPlay();
+        this.isPlaying = false;
+        this.isShuffle = false;
+        this.sendPlayerData();
     },
     downloadSong: function downloadSong(ytid, callback) {
         _database.database.getSong(ytid, function (res) {
             if (res) {
                 console.log("Video already downloaded to " + res.file);
+                _notification.notification.notify({ msg: 'Skipping ' + ytid + ' - already downloaded' });
                 if (callback) callback();
                 return;
             }
@@ -119,9 +151,11 @@ var player = exports.player = Object.assign({}, {
             YD.on("error", function (error) {
                 if (callback) callback();
                 console.log(error);
+                _notification.notification.notify({ msg: 'error while downloading ' + ytid });
             });
             YD.on("progress", function (progress) {
                 console.log(JSON.stringify(progress));
+                //notification.notify({msg: 'Downloading '+ytid+', '+Math.round(progress.progress.percentage)+'%'});
             });
             YD.on("finished", function (err, data) {
                 (0, _youtubeInfo2.default)(ytid, function (err, i) {
@@ -131,6 +165,7 @@ var player = exports.player = Object.assign({}, {
                         return;
                     }
                     console.log("Finished downloading " + i.title + " to " + song.file);
+                    _notification.notification.notify({ msg: 'Successfully downloaded ' + i.title });
                     song.name = i.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                     song.author = i.owner.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                     song.length = i.duration;
@@ -148,5 +183,18 @@ var player = exports.player = Object.assign({}, {
             i++;
             if (i < ytids.length) f(ytids[i], next);
         }
+    },
+    findSong: function findSong(songData, cb) {
+        _database.database.findSong(songData, cb);
+    },
+    sendPlayerData: function sendPlayerData() {
+        _notification.notification.notify({ player: this.getInfo() });
+    },
+    getInfo: function getInfo() {
+        return { isPlaying: this.isPlaying, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: _amplifier.amplifier.mode };
+    },
+    startPlaylistWatchman: function startPlaylistWatchman() {
+        _amplifier.amplifier.startWatchman();
+        //TODO interval with check DO I HAVE TO PLAY SOMETHING from first database result
     }
 });

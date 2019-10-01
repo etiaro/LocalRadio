@@ -101,10 +101,22 @@ var database = exports.database = Object.assign({}, {
               });
 
             case 5:
+              _context.next = 7;
+              return _this.con.query("SELECT * FROM information_schema.tables WHERE table_schema = '" + cfg.database + "' AND table_name = 'timeSchedule' LIMIT 1;", function (err, result, fields) {
+                if (err) console.log(err);else {
+                  if (result.length == 0) {
+                    console.log("TimeSchedule table not found, creating...");
+                    _this.con.query("CREATE TABLE `vFAJuE5WlU`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB;", function (err, result, fields) {
+                      if (err) console.log(err);else console.log('Created table timeSchedule');
+                    });
+                  }
+                }
+              });
 
+            case 7:
               console.log("Database validation done");
 
-            case 6:
+            case 8:
             case 'end':
               return _context.stop();
           }
@@ -148,18 +160,42 @@ var database = exports.database = Object.assign({}, {
     });
   },
   findSong: function findSong(songData, cb) {
-    if (songData.ytid) {
-      this.con.query("SELECT * FROM `songs` WHERE `ytid`='" + songData.ytid + "'", function (err, result, fields) {
-        if (err) console.log(err);else {
-          cb(result[0]);
-        }
-      });
-    } else if (songData.name) {
-      this.con.query("SELECT * FROM `songs` WHERE `name` LIKE '%{" + songData.name + "}%'", function (err, result, fields) {
-        if (err) console.log(err);else {
-          cb(result[0]);
-        }
-      });
-    } else cb(null);
-  }
+    var query = "SELECT * FROM `songs` ";
+    if (songData) {
+      if (songData.ytid) query += "WHERE `ytid`='" + songData.ytid + "' ";
+      if (songData.name) query += "WHERE `name` LIKE '%" + songData.name + "%' OR `author` LIKE '%" + songData.name + "%' ";
+      query += "ORDER BY `name` ";
+      if (songData.site) query += "LIMIT " + 30 * songData.site + " ";else query += "LIMIT 30 ";
+    } else query += " ORDER BY `name` LIMIT 30;";
+
+    this.con.query(query, function (err, result, fields) {
+      if (err) console.log(err);else {
+        cb(result);
+      }
+    });
+  },
+  getPlaylistData: function getPlaylistData() {
+    //gets Playlist plans from now, sorted by date
+  },
+  modifyPlaylist: function modifyPlaylist(entry) {
+    //modify or update entry
+  },
+  setAmplifierTimeSchedule: function setAmplifierTimeSchedule(schedule, cb) {
+    if (typeof schedule === "string") schedule = JSON.parse(schedule);
+    if (!schedule.day) schedule.day = [false, false, false, false, false, false, false];
+    if (!schedule.enabledTimees) schedule.enabledTimes = [];
+    schedule = JSON.stringify(schedule);
+
+    this.con.query("INSERT INTO `timeSchedule`(`data`) VALUES ('" + schedule + "')", function (err, result, fields) {
+      if (err) console.log(err);else if (cb) cb(result);
+    });
+    //adds a record
+  },
+  getAmplifierTimeSchedule: function getAmplifierTimeSchedule(cb) {
+    this.con.query("SELECT * FROM `timeSchedule` ORDER BY `id` DESC LIMIT 1", function (err, result, fields) {
+      if (err) console.log(err);else if (cb) cb(JSON.parse(result[0]));
+    });
+  },
+  getSettings: function getSettings() {},
+  setSettings: function setSettings() {}
 });
