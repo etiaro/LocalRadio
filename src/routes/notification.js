@@ -6,8 +6,8 @@ export default () => {
     const api = Router();
 
     // /api/notification
-    api.get('/', checkPerm, (req, res, next) => {
-        notification.addListener(res);
+    api.post('/', checkPerm, (req, res, next) => {
+        notification.addListener(res, req.body.id);
     });
     
     return api;

@@ -14,21 +14,37 @@ export const notification = Object.assign({}, {
       this._type = value;
     },
 
-    listeners: [],
-    addListener(res){
-        this.listeners.push((data)=>{
-            res.status(200).send(data);
-        });
+    listeners: {},
+    addListener(res, id){
+        this.listeners[id] = {
+            send: (data)=>{
+                    res.status(200).send(data);
+                  },
+            sent: 0
+        }
+    },
+    sendTo(data, id){
+        const sendID = id;
+        setTimeout(()=>{
+            if(!(notification.listeners[sendID]))
+                return;
+            if(notification.listeners[sendID].sent >= 5){
+                delete notification.listeners[sendID];
+                return;
+            }if(notification.listeners[sendID].sent != 0){
+                notification.listeners[sendID].sent++;
+                this.sendTo(data, id);
+            }else
+                try{
+                    notification.listeners[sendID].sent = 1;
+                    notification.listeners[sendID].send(data);
+                }catch(e){
+                }
+        }, 200);
     },
     notify(data){
-        for(let i = 0; i < this.listeners.length; i++){
-            try{
-                this.listeners[i](data);
-            }catch(e){
-                console.log('listener disconnected ', e);
-            }
-            this.listeners.splice(i,1);
-            i--;
-        }
+        console.log(this.listeners);
+        for(let id in this.listeners)
+            this.sendTo(data, id);
     }
 });

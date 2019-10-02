@@ -15,7 +15,6 @@ export default () => {
         });
     });
     api.post('/play', checkPerm, (req, res, next) => { 
-        console.log(req.body);
         if(req.body.shufflePlay){
             player.playShuffle();
             return res.status(200).send({msg: "query accepted"});

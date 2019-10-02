@@ -4,9 +4,20 @@ import Panel from './Panel';
 import Login from './Login';
 import Cookies from 'universal-cookie';
 
+
+function makeid(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ )
+       result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    return result;
+ }
+
 const cookies = new Cookies();
 
 const adress = "http://"+window.location.hostname+":80/api/";
+var notificationID = makeid(8);
 
 function getUserData(){
     var xmlHttp = new XMLHttpRequest();
@@ -96,18 +107,18 @@ function getPlayerData(){
 function notificationHandler(callbackMsg, callbackPlayer){
     setTimeout(()=>{
         var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open( "GET", adress+"notification/");
+        xmlHttp.open( "POST", adress+"notification/");
         xmlHttp.setRequestHeader("Content-Type", "application/json");
         xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));
         xmlHttp.timeout = 30000;
         xmlHttp.onload = function () {
+            notificationHandler(callbackMsg, callbackPlayer);
             try{
                 const res = JSON.parse(xmlHttp.responseText);
                 if(res.msg)
                     callbackMsg(res.msg);
                 if(res.player)
                     callbackPlayer(res.player);
-                notificationHandler(callbackMsg, callbackPlayer);
             }catch(e){
                 console.log(xmlHttp.statusText);
             }
@@ -116,8 +127,8 @@ function notificationHandler(callbackMsg, callbackPlayer){
             notificationHandler(callbackMsg, callbackPlayer);
             console.error(xmlHttp.statusText);
           };
-        xmlHttp.send(null);
-    }, 1);
+        xmlHttp.send(JSON.stringify({id:notificationID}));
+    }, 0);
 }
 
 export {getUserData, changePage, login as apiLogin, findSong, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlayerData};

@@ -69,10 +69,10 @@ export const player = Object.assign({}, {
         this.sendPlayerData();
     },
     playShuffle(){
-        if(!this.isShuffle){
+        if(!this.isShuffle)
             this.isShuffle = true;
-            this.sendPlayerData();
-        }
+           // if(this.isPlaying)
+                this.sendPlayerData();
         if(!this.isPlaying)
             this.nextShuffle();
     },
@@ -85,7 +85,7 @@ export const player = Object.assign({}, {
             this.shuffleTimeout = null;
         }
         this.songInfo = {};
-    },
+    }, 
     stopPlaying(){
         this.clearLastPlay();
         this.isPlaying = false;
