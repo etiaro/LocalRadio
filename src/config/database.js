@@ -1,8 +1,9 @@
 export default {
     db:{
-        host: "remotemysql.com",
+        host: "remotemysql.com", 
         user: "vFAJuE5WlU",
         password: "xbbNY3cyTh",
-        database: "vFAJuE5WlU"
+        database: "vFAJuE5WlU",
+        multipleStatements: true
       }
 };

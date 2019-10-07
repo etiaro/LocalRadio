@@ -69,10 +69,10 @@ export const player = Object.assign({}, {
         this.sendPlayerData();
     },
     playShuffle(){
-        if(!this.isShuffle)
+        if(!this.isShuffle){
             this.isShuffle = true;
-           // if(this.isPlaying)
-                this.sendPlayerData();
+            this.sendPlayerData();
+        }
         if(!this.isPlaying)
             this.nextShuffle();
     },
@@ -163,9 +163,21 @@ export const player = Object.assign({}, {
     getInfo(){
         return {isPlaying: this.isPlaying, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode};
     },
-
+    changePlaylist(data){
+        database.modifyPlaylist(data);
+    },
     startPlaylistWatchman(){
         amplifier.startWatchman();
-        //TODO interval with check DO I HAVE TO PLAY SOMETHING from first database result
+        setInterval(()=>{
+            database.getPlaylistData((res)=>{
+                if(res.length == 0)
+                    return;
+                
+                if(res[0].date*1000 < new Date().getTime()){
+                    this.playSong(res[0].file, res[0].name, res[0].length);
+                    database.modifyPlaylist({id: res[0].id, was: 1});
+                }
+            });
+        }, 1000);
     }
 });

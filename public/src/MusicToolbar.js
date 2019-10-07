@@ -47,6 +47,10 @@ const useStyles = makeStyles(theme => ({
         display: "flex",
         alignItems: "center",
         maxWidth: "calc(100vw - 160px)"
+    },
+    state:{
+        position: "absolute",
+        marginLeft: 500
     }
   }));
 
@@ -72,11 +76,12 @@ export default function MusicToolbar(props) {
         color = "white";
 
         console.log(props.playerData);
+    
     return (
         <React.Fragment>
             <AppBar position="fixed" color="primary" className={classes.bar}>
                     <Toolbar className={classes.cont}>
-                    <IconButton edge="start" color="inherit" aria-label="Open drawer" className={classes.drawerBtn} >
+                    <IconButton edge="start" color="inherit" aria-label="Open drawer" className={classes.drawerBtn} onClick={props.toggleSettings} >
                         <MenuIcon />
                     </IconButton>
                     <IconButton color="inherit" onClick={()=>props.addWindowSwitch()}  className={classes.addBtn} >

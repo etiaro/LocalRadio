@@ -43,7 +43,6 @@ export const notification = Object.assign({}, {
         }, 200);
     },
     notify(data){
-        console.log(this.listeners);
         for(let id in this.listeners)
             this.sendTo(data, id);
     }

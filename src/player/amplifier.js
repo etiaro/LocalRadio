@@ -18,7 +18,7 @@ export const amplifier = Object.assign({}, {
       this._type = value;
     },
 
-    modes: {
+    modes: {    //TODO get fom settings
         off:0,
         auto:1,
         on:2
@@ -44,7 +44,9 @@ export const amplifier = Object.assign({}, {
                 amplifier.state = data.toString()[0];
         });
 
-        setInterval((function(){
+        var lastMode = '';
+
+        setInterval(()=>{
             if(!port.isOpen)
                 port.open(function (err) {
                     if (err && !isError){
@@ -56,13 +58,20 @@ export const amplifier = Object.assign({}, {
                 if(amplifier.mode == amplifier.modes.on){
                     port.write('+');
                     if(player.isShuffle) player.playShuffle();
-                }else if(amplifier.mode == amplifier.modes.off)
+                    lastMode = '+';
+                }else if(amplifier.mode == amplifier.modes.off){
                     port.write('-');
-                else if(amplifier.mode == amplifier.modes.auto){
+                    if(lastMode != '-')
+                        player.stopPlaying();
+                    lastMode = '-';
+                }else if(amplifier.mode == amplifier.modes.auto){
                     const now = new Date();
                     database.getAmplifierTimeSchedule((res)=>{
                         if(!res.day[now.getDay()]){
                             port.write('-');
+                            if(lastMode != '-')
+                                player.stopPlaying();
+                            lastMode = '-';
                             return;
                         }
                         var enable = false;
@@ -74,12 +83,17 @@ export const amplifier = Object.assign({}, {
                         if(enable){
                             port.write('+');
                             if(player.isShuffle) player.playShuffle();
-                        }else
+                            lastMode = '+';
+                        }else{
                             port.write('-');
+                            if(lastMode != '-')
+                                player.stopPlaying();
+                            lastMode = '-';
+                        }
                     });
                 }
             }
-        }),1000);
+        },1000);
     },
     setMode(mode){
         if(mode == this.modes.on || mode == this.modes.off || mode == this.modes.auto)

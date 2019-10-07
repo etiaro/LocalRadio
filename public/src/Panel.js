@@ -5,7 +5,7 @@ import Toolbar from './MusicToolbar';
 import AddMenu from "./AddMenu";
 import Library from "./Library";
 import Notifications from "./Notifications";
-
+import Settings from "./Settings";
 
 import {notificationHandler, getPlayerData} from './ApiConnection';
 
@@ -20,7 +20,9 @@ export default class Panel extends React.Component{
             tab: 0,
             notifications: [],
             notificationsTimeout: 5000,
-            playerData: getPlayerData()
+            playerData: getPlayerData(),
+            settingsOpen: false,
+            actSite: "Library"
         };
     }
 
@@ -48,6 +50,20 @@ export default class Panel extends React.Component{
     handleTabChange(ev, newVal){
         this.setState({tab: newVal});
     }
+    toggleSettings(state){
+        if(state)    
+            this.setState({settingsOpen: state});
+        else
+            this.setState({settingsOpen: !this.state.settingsOpen});
+    }
+    openLibrary(){
+        this.setState({actSite: "Library"});
+        this.toggleSettings(false);
+    }
+    openPlaylist(){
+        this.setState({actSite: "Playlist"});
+        this.toggleSettings(false);
+    }
 
     render(){
         const s = {
@@ -55,12 +71,20 @@ export default class Panel extends React.Component{
         }
         if(this.state.isAddWindowVisible)
             s.display ="block";
+
+        let site = "";
+        if(this.state.actSite == "Library")
+            site = (<Library/>);
+        if(this.state.actSite == "Playlist")
+            site = "";
         return (
             <React.Fragment>
-                <Library />
+                {site}
                 <Notifications notifications={this.state.notifications}/>
                 <AddMenu isVisible={this.state.isAddWindowVisible} close={()=>{this.setState({isAddWindowVisible:false})}}/>
-                <Toolbar playerData={this.state.playerData} addWindowSwitch={()=>{this.addWindowSwitch()}}/>
+                <Toolbar playerData={this.state.playerData} addWindowSwitch={()=>{this.addWindowSwitch()}} toggleSettings={()=>this.toggleSettings()}/>
+                <Settings open={this.state.settingsOpen} close={()=>this.toggleSettings()} 
+                    openLibrary={()=>this.openLibrary()} openPlaylist={()=>this.openPlaylist()}/>
             </React.Fragment>
         );
     }
