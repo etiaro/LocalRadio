@@ -163,6 +163,9 @@ export const player = Object.assign({}, {
     getInfo(){
         return {isPlaying: this.isPlaying, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode};
     },
+    getPlaylist(date, cb){
+        database.getAllPlaylistData(date, cb);
+    },
     changePlaylist(data){
         database.modifyPlaylist(data);
     },

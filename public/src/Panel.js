@@ -4,6 +4,7 @@ import './Panel.css';
 import Toolbar from './MusicToolbar';
 import AddMenu from "./AddMenu";
 import Library from "./Library";
+import Playlist from "./Playlist"; 
 import Notifications from "./Notifications";
 import Settings from "./Settings";
 
@@ -76,7 +77,7 @@ export default class Panel extends React.Component{
         if(this.state.actSite == "Library")
             site = (<Library/>);
         if(this.state.actSite == "Playlist")
-            site = "";
+            site = (<Playlist/>);
         return (
             <React.Fragment>
                 {site}

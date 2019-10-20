@@ -14,6 +14,11 @@ export default () => {
             res.status(200).send({msg: "query accepted", result: result});
         });
     });
+    api.get('/playlist', checkPerm, (req, res, next)=> {
+        player.getPlaylist(req.body.date, (data)=>{
+            return res.status(200).send({amplifier: data[0], playlist: data[1]});
+        });
+    });
     api.post('/play', checkPerm, (req, res, next) => { 
         if(req.body.shufflePlay){
             player.playShuffle();

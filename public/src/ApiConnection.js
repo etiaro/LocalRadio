@@ -104,6 +104,15 @@ function getPlayerData(){
     xmlHttp.send(null);
     return JSON.parse(xmlHttp.responseText);
 }
+function getPlaylistData(date){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", adress+"player/playlist/", false);
+    xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.send({date: date});
+    console.log(JSON.parse(xmlHttp.responseText));
+    return JSON.parse(xmlHttp.responseText);
+}
 function notificationHandler(callbackMsg, callbackPlayer){
     setTimeout(()=>{
         var xmlHttp = new XMLHttpRequest();
@@ -131,4 +140,4 @@ function notificationHandler(callbackMsg, callbackPlayer){
     }, 0);
 }
 
-export {getUserData, changePage, login as apiLogin, findSong, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlayerData};
+export {getUserData, changePage, login as apiLogin, findSong, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData};

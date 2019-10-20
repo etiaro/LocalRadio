@@ -6,6 +6,8 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import { LibraryBooks, PlaylistAddCheck} from '@material-ui/icons';
+
 
 
 const useStyles = makeStyles(theme => ({
@@ -21,11 +23,11 @@ export default function Settings(props) {
         <Drawer anchor="right" open={props.open} onClose={props.close}>
             <List className={classes.pickMenu}>
                 <ListItem button onClick={()=>props.openLibrary()}>
-                <ListItemIcon></ListItemIcon>
+                <ListItemIcon><LibraryBooks/></ListItemIcon>
                 <ListItemText primary="Library" />
                 </ListItem>
                 <ListItem button onClick={()=>props.openPlaylist()}>
-                <ListItemIcon></ListItemIcon>
+                <ListItemIcon><PlaylistAddCheck/></ListItemIcon>
                 <ListItemText primary="Playlist" />
                 </ListItem>
             </List>

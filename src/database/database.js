@@ -177,20 +177,32 @@ export const database = Object.assign({}, {
           }
       });
     },
-    getAllPlaylistData(cb){
+    getAllPlaylistData(date, cb){
       //TODO fix timezones
-      this.con.query("UPDATE `playlist` SET `was`=1 WHERE `date`<(NOW()-3); SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid ORDER BY `date` ASC;",
+      var query = "SELECT * FROM `timeSchedule` ORDER BY `id` DESC LIMIT 1;"+
+      "SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid WHERE ";
+      
+      if(date){
+        if(date instanceof Date)
+          date = date.getTime();
+        query += "playlist.date>DATE(FROM_UNIXTIME("+date+"))";
+      }else
+        query += "playlist.date>CURDATE()";
+
+      query+= " ORDER by date ASC;";
+
+      this.con.query( query,
         (err, result, fields) => {
           if(err) 
             console.log(err);
           else{
-            if(cb) cb(result[1]);
+            if(cb) cb(result);
           }
       });
     },
     getPlaylistData(cb){
       //TODO fix timezones
-      this.con.query("UPDATE `playlist` SET `was`=1 WHERE `date`<(NOW()-3); SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid AND playlist.was=0 ORDER BY `date` ASC;",
+      this.con.query("UPDATE `playlist` SET `was`=1 WHERE `date`<(NOW()-30); SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid AND playlist.was=0 ORDER BY `date` ASC;",
         (err, result, fields) => {
           if(err) 
             console.log(err);
