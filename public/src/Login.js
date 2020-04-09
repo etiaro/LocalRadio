@@ -11,7 +11,8 @@ export default class Login extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            waiting: false
+            waiting: false,
+            noConnection: false
         };
     }
     loginClicked(){
@@ -22,8 +23,12 @@ export default class Login extends React.Component{
             this.setState({waiting: false});
         else{
             this.setState({waiting: true});
-            if(apiLogin(response)) return;
-            this.setState({waiting: false});
+            apiLogin(response, (resp)=>{
+                if(resp === true) return;
+                else if(resp === -1) this.setState({noConnection: true});
+    
+                this.setState({waiting: false});
+            });
         }
     }
     render(){
@@ -38,10 +43,11 @@ export default class Login extends React.Component{
                 </div>);
         if(this.state.waiting)
             content = (<CircularProgress/>);
+        else if(this.state.noConnection)
+            content = "Sorry, there is a problem with connecting to server, try again later or contact with administrator";
         return (
             <Container id="Cont">
                 <Paper id="Paper" elevation={2} square={true}>{content}</Paper>
-                
             </Container>
         );
     }

@@ -6,6 +6,7 @@ export const notification = Object.assign({}, {
     singletonMethod() {
       return 'singletonMethod2';
     },
+    notID: 0,
     _type: 'NotificationController',
     get type() {
       return this._type;
@@ -28,10 +29,11 @@ export const notification = Object.assign({}, {
         setTimeout(()=>{
             if(!(notification.listeners[sendID]))
                 return;
-            if(notification.listeners[sendID].sent >= 5){
+            if(notification.listeners[sendID].sent >= 50){
                 delete notification.listeners[sendID];
                 return;
-            }if(notification.listeners[sendID].sent != 0){
+            }
+            if(notification.listeners[sendID].sent != 0){
                 notification.listeners[sendID].sent++;
                 this.sendTo(data, id);
             }else
@@ -43,6 +45,7 @@ export const notification = Object.assign({}, {
         }, 200);
     },
     notify(data){
+        data.notID = this.notID++;
         for(let id in this.listeners)
             this.sendTo(data, id);
     }

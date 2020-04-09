@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
@@ -6,6 +6,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import {switchShuffle,stopSong} from './ApiConnection';
 import { Menu as MenuIcon, PlayCircleOutline as PlayIcon, PauseCircleOutline as PauseIcon, LibraryAdd as AddIcon, Shuffle} from '@material-ui/icons';
 
@@ -14,6 +15,11 @@ const useStyles = makeStyles(theme => ({
         position: 'fixed',
         bottom: 0,
         top: 'auto'
+    },
+    progressBar:{
+        width: "100vw",
+        background: "none",
+        position: "absolute"
     },
     cont: {
         margin: 0,
@@ -74,32 +80,47 @@ export default function MusicToolbar(props) {
     var color = "gray";
     if(props.playerData.isShuffle)
         color = "white";
-
-        console.log(props.playerData);
     
+    var [completed, setCompleted] = useState(0);
+    useEffect(()=>{
+        if(!props.playerData.isPlaying) setCompleted(0);
+        else{
+            var time = props.playerData.time
+            setCompleted((time / props.playerData.song.length)*100);
+            var timer = setInterval(()=>{
+                time+=0.1;
+                setCompleted((time / props.playerData.song.length)*100);
+            }, 100);
+        }
+        return () => {
+            clearInterval(timer);
+        };
+    }, [props.playerData]);
+
+
     return (
         <React.Fragment>
             <AppBar position="fixed" color="primary" className={classes.bar}>
-                    <Toolbar className={classes.cont}>
-                    <IconButton edge="start" color="inherit" aria-label="Open drawer" className={classes.drawerBtn} onClick={props.toggleSettings} >
-                        <MenuIcon />
-                    </IconButton>
-                    <IconButton color="inherit" onClick={()=>props.addWindowSwitch()}  className={classes.addBtn} >
-                        <AddIcon />
-                    </IconButton>
-                    <IconButton color="inherit" onClick={()=>playClick()} className={classes.playBtn} >
-                    { playIco }
-                    </IconButton>
-                    <IconButton color="inherit" onClick={()=>switchShuffle()}  className={classes.shuffleBtn} >
-                        <Shuffle style={{color: color}}/>
-                    </IconButton>
-                    </Toolbar>
-                    <Container className={classes.title}>
-                        <Typography component="h2">
-                            {props.playerData.song.name}
-                        </Typography>
-                    </Container>
-                    
+                <LinearProgress color="secondary" variant="determinate" value={completed} className={classes.progressBar}/>
+                <Toolbar className={classes.cont}>
+                <IconButton edge="start" color="inherit" aria-label="Open drawer" className={classes.drawerBtn} onClick={props.toggleSettings}>
+                    <MenuIcon />
+                </IconButton>
+                <IconButton color="inherit" onClick={()=>props.addWindowSwitch()}  className={classes.addBtn} >
+                    <AddIcon />
+                </IconButton>
+                <IconButton color="inherit" onClick={()=>playClick()} className={classes.playBtn} >
+                { playIco }
+                </IconButton>
+                <IconButton color="inherit" onClick={()=>switchShuffle()}  className={classes.shuffleBtn} >
+                    <Shuffle style={{color: color}}/>
+                </IconButton>
+                </Toolbar>
+                <Container className={classes.title}>
+                    <Typography component="h2">
+                        {props.playerData.song.name}
+                    </Typography>
+                </Container>
             </AppBar>
         </React.Fragment>
     );

@@ -40,13 +40,16 @@ export const player = Object.assign({}, {
     isPlaying: false,
     isShuffle: false,
     songInfo: {},
+    startTime: new Date(),
     playSong(fileName, name, length){
         this.clearLastPlay();
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
         this.audio = this.p.play('./Music/'+fileName, function(err){
             if (err) throw err;
         });
+        player.startTime = new Date();
         player.songInfo.name = name;
+        player.songInfo.length = length;
         player.isPlaying = true;
         player.sendPlayerData();
         player.shuffleTimeout = setTimeout(()=>{
@@ -71,7 +74,8 @@ export const player = Object.assign({}, {
     playShuffle(){
         if(!this.isShuffle){
             this.isShuffle = true;
-            this.sendPlayerData();
+            if(!this.isPlaying)
+                this.sendPlayerData();
         }
         if(!this.isPlaying)
             this.nextShuffle();
@@ -88,9 +92,12 @@ export const player = Object.assign({}, {
     }, 
     stopPlaying(){
         this.clearLastPlay();
+        var tmp = this.isPlaying;
         this.isPlaying = false;
         this.isShuffle = false;
-        this.sendPlayerData();
+        if(tmp)
+            console.log("stopped playing")
+            this.sendPlayerData();
     },
     downloadSong(ytid, callback){
         database.getSong(ytid, (res)=>{
@@ -160,14 +167,25 @@ export const player = Object.assign({}, {
     sendPlayerData(){
         notification.notify({player: this.getInfo()});
     },
+    sendPlaylistData(){
+        player.getPlaylist(null, (data)=>{
+            notification.notify({amplifier: data[0], playlist: data[1]});
+        });
+    },
     getInfo(){
-        return {isPlaying: this.isPlaying, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode};
+        var time = Math.floor(((new Date()).getTime() - this.startTime.getTime())/1000);
+        return {isPlaying: this.isPlaying, time:time, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode};
     },
     getPlaylist(date, cb){
         database.getAllPlaylistData(date, cb);
     },
     changePlaylist(data){
         database.modifyPlaylist(data);
+        this.sendPlaylistData();
+    },
+    changeSchedule(data){
+        database.setAmplifierTimeSchedule(data);
+        this.sendPlaylistData();
     },
     startPlaylistWatchman(){
         amplifier.startWatchman();

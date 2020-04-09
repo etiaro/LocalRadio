@@ -1,9 +1,9 @@
 export default {
     db:{
-        host: "remotemysql.com", 
-        user: "vFAJuE5WlU",
-        password: "xbbNY3cyTh",
-        database: "vFAJuE5WlU",
+        host: "158.75.60.75", 
+        user: "radiobeben",
+        password: "zdroidsenpai",
+        database: "radiobeben",
         multipleStatements: true
       }
 };

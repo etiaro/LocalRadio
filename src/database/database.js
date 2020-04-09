@@ -1,6 +1,7 @@
 import mysql from 'mysql';
 import moment from 'moment';
 import { ENETRESET } from 'constants';
+import { player } from '../player/player';
 
 const db = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
 export default db;  //singleton stuff, don't care about it
@@ -93,7 +94,6 @@ export const database = Object.assign({}, {
           else{
             if(result.length == 0){
               console.log("Playlist table not found, creating..."); 
-              console.log("CREATE TABLE `"+cfg.database+"`. ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL , `was` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;");
               this.con.query("CREATE TABLE `"+cfg.database+"`.`playlist` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL , `was` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
               (err, result, fields)=>{
                 if(err) console.log(err)
@@ -102,7 +102,7 @@ export const database = Object.assign({}, {
             }
           } 
       });
-      
+      this.fixPlaylistToFitSchedule();
       console.log("Database validation done");
     },
     getUser(userId, cb){
@@ -155,25 +155,30 @@ export const database = Object.assign({}, {
     },
     findSong(songData, cb){
       var query = "SELECT * FROM `songs` ";
+      var query2 = "SELECT COUNT(*) FROM `songs` ";
       if(songData){
-        if(songData.ytid)
+        if(songData.ytid){
           query+="WHERE `ytid`='"+songData.ytid+"' ";
-        if(songData.name)
+          query2+="WHERE `ytid`='"+songData.ytid+"' ";
+        }
+        if(songData.name){
           query+= "WHERE `name` LIKE '%"+songData.name+"%' OR `author` LIKE '%"+songData.name+"%' ";
+          query2+= "WHERE `name` LIKE '%"+songData.name+"%' OR `author` LIKE '%"+songData.name+"%' ";
+        }
         query+="ORDER BY `name` ";
         if(songData.site)
-          query+= "LIMIT "+30*songData.site+" ";
+          query+= "LIMIT "+30*songData.site;
         else
           query+= "LIMIT 30 ";
-
-      }else
-        query += " ORDER BY `name` LIMIT 30;";
+      }else{
+        query += " ORDER BY `name` LIMIT 30";
+      }
       
-      this.con.query(query,
+      this.con.query(query+";"+query2+";",
         (err, result, fields) => {
           if(err) console.log(err);
           else{
-            cb(result);
+            cb(result[0], result[1][0]["COUNT(*)"]);
           }
       });
     },
@@ -183,26 +188,38 @@ export const database = Object.assign({}, {
       "SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid WHERE ";
       
       if(date){
-        if(date instanceof Date)
-          date = date.getTime();
+        if(date instanceof Number) date = new Date(date * 1000);
+        if(typeof(date) === "string") date = new Date(date);
+        date.setHours(0,0,0,0);
+        var dateTo = new Date(date);
+        dateTo.setHours(23,59,59,999);
+        console.log(date, dateTo);
+        date = Math.floor(date.getTime()/1000);
+        dateTo = Math.floor(dateTo.getTime()/1000);
+        query += "playlist.date>FROM_UNIXTIME("+date+") AND playlist.date<FROM_UNIXTIME("+dateTo+")";
+      }else{
+        date = new Date();
+        date.setHours(0,0,0,0);
+        date = Math.floor(date.getTime()/1000);
         query += "playlist.date>DATE(FROM_UNIXTIME("+date+"))";
-      }else
-        query += "playlist.date>CURDATE()";
+      }
 
-      query+= " ORDER by date ASC;";
-
+      query+= " ORDER by playlist.date ASC;";
       this.con.query( query,
         (err, result, fields) => {
           if(err) 
             console.log(err);
           else{
+            if(result[0].length > 0)
+            result[0] = JSON.parse(result[0][0].data)
             if(cb) cb(result);
           }
       });
     },
     getPlaylistData(cb){
-      //TODO fix timezones
-      this.con.query("UPDATE `playlist` SET `was`=1 WHERE `date`<(NOW()-30); SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid AND playlist.was=0 ORDER BY `date` ASC;",
+      var time = new Date(Date.now() - 30000);
+      time = Math.floor(time.getTime()/1000);
+      this.con.query(" UPDATE `playlist` SET `was`=1 WHERE `date`<FROM_UNIXTIME("+time+"); SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid AND playlist.was=0 ORDER BY `date` ASC;",
         (err, result, fields) => {
           if(err) 
             console.log(err);
@@ -211,9 +228,13 @@ export const database = Object.assign({}, {
           }
       });
     },
+
     modifyPlaylist(entry, cb){
+      if(typeof(entry.date) === "string")
+        entry.date = new Date(entry.date);
       if(entry.date instanceof Date)
         entry.date = entry.date.getTime();
+      entry.date = Math.floor(entry.date/1000);
       if(entry.id){
         var query = "UPDATE playlist SET";
         query += !!entry.ytid ? " ytid="+entry.ytid : "";
@@ -235,15 +256,16 @@ export const database = Object.assign({}, {
               if(cb) cb(result);
             }
           });
+      this.fixPlaylistToFitSchedule();
       //date FROM_UNIXTIME('Date.toMiliseconds or smthg')
       //modify or update entry
     },
-    setAmplifierTimeSchedule(schedule, cb){
+    setAmplifierTimeSchedule(schedule, cb){ //TODO use somewhere! 
       if(typeof schedule === "string")
         schedule = JSON.parse(schedule);
       if(!schedule.day)
         schedule.day = [false, false, false, false, false, false, false];
-      if(!schedule.enabledTimees)
+      if(!schedule.enabledTimes)
         schedule.enabledTimes = [];
       schedule = JSON.stringify(schedule);
       
@@ -254,6 +276,7 @@ export const database = Object.assign({}, {
           else
             if(cb) cb(result);
       });
+      this.fixPlaylistToFitSchedule();
       //adds a record
     },
     getAmplifierTimeSchedule(cb){ 
@@ -262,7 +285,48 @@ export const database = Object.assign({}, {
           if(err) 
             console.log(err);
           else
-            if(cb) cb(result[0]);
+            if(cb) 
+              if(result[0]) cb(JSON.parse(result[0].data));
+              else cb(null);
+      });
+    },
+    fixPlaylistToFitSchedule(){
+      //TODO REWORK THIS SHIT!
+      this.getAllPlaylistData(new Date(), (playlistD)=>{
+        var songs = playlistD[1];
+        var schedule = playlistD[0].day[new Date().getDay()] ? playlistD[0].enabledTimes : [];
+        if(songs.length == 0) return;
+        var beginning = new Date(songs[0].date*1000);
+        var songInd = 0;
+        var actSchInd = 0;
+        while(songInd < songs.length){
+          songs[songInd].length = parseInt(songs[songInd].length)
+          beginning = new Date(Math.max(new Date(songs[songInd].date*1000), beginning));
+          while(actSchInd < schedule.length && (schedule[actSchInd].end.hour < beginning.getHours() || 
+                (schedule[actSchInd].end.hour == beginning.getHours() && schedule[actSchInd].end.minutes < beginning.getMinutes()))){
+                  actSchInd++;
+          }
+          if(actSchInd == schedule.length){ 
+            var timestamp = Math.floor(beginning.getTime()/1000);
+            this.con.query("DELETE FROM playlist WHERE DATE(date)=DATE(FROM_UNIXTIME("+timestamp+")) AND date>=FROM_UNIXTIME("+timestamp+");",
+            (err, result, fields) => {
+              if(err) console.log(err);
+            });
+            return; 
+          }// TODO remove all next songs
+          var tmpDate = new Date(beginning.getFullYear(),beginning.getMonth(), beginning.getDate(), schedule[actSchInd].begin.hour, schedule[actSchInd].begin.minutes)
+          beginning = new Date(Math.max(tmpDate, beginning));
+          var timestamp = Math.floor(beginning.getTime()/1000);
+          beginning = new Date((timestamp+songs[songInd].length)*1000);
+          if(timestamp > songs[songInd].date) {
+            this.con.query("UPDATE playlist SET date=FROM_UNIXTIME("+timestamp+") WHERE id="+songs[songInd].id+";",
+              (err, result, fields) => {
+                if(err) console.log(err);
+              });
+          }
+          songInd++;
+        }
+        player.sendPlaylistData();
       });
     },
     getSettings(){

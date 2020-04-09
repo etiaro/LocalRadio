@@ -2,9 +2,8 @@ body{
     background-color: #FFFFFF;
     background-image: none;
 }
-#addPaper{
+.window{
     text-align: center;
-    padding: 1em;
     padding-top: 3.5em;
     width: fit-content;
     position: absolute;
@@ -13,11 +12,20 @@ body{
     top: 0;
     bottom: 10em;
     margin: auto;
-
     height: fit-content;
+}
+.window-content{
+    padding: 1em;
+    max-height: 65vh;
+    overflow-y: auto;
 }
 
 .Library{
     overflow: scroll;
     height: 95vh;
+}
+.Playlist{
+    overflow: scroll;
+    height: 95vh;
+    text-align: center;
 }
