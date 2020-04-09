@@ -1,14 +1,16 @@
-import React from 'react';
+import React, {createRef} from 'react';
 import './Panel.css';
 
 import Toolbar from './MusicToolbar';
 import AddMenu from "./AddMenu";
+import ScheduleMenu from "./ScheduleMenu";
 import Library from "./Library";
 import Playlist from "./Playlist"; 
 import Notifications from "./Notifications";
 import Settings from "./Settings";
 
 import {notificationHandler, getPlayerData} from './ApiConnection';
+
 
 export default class Panel extends React.Component{
     constructor(props){
@@ -17,13 +19,16 @@ export default class Panel extends React.Component{
             waiting: false,
             userData: JSON.parse(this.props.userData),
             isPlaying: false,
-            isAddWindowVisible: false,
             tab: 0,
             notifications: [],
             notificationsTimeout: 5000,
-            playerData: getPlayerData(),
+            playerData: {song:{}},
             settingsOpen: false,
-            actSite: "Library"
+            actSite: "Library",
+            actWindow: "",
+            playlistRef: createRef(),
+            scheduleRef: createRef(),
+            librarySelectCallback: ()=>{}
         };
     }
 
@@ -40,13 +45,29 @@ export default class Panel extends React.Component{
             }, this.state.notificationsTimeout)
         }, (data)=>{
             this.setState({playerData:data});
+        }, (data, data2)=>{
+            this.state.playlistRef.current.updateData();
+            if(data2)
+                this.state.scheduleRef.current.updateData();
+        });
+        getPlayerData((res)=>{
+            this.setState({playerData: res});
         });
     }
     changePlaying(){
         this.setState({isPlaying: !this.state.isPlaying});
     }
     addWindowSwitch(){
-        this.setState({isAddWindowVisible: !this.state.isAddWindowVisible});
+        this.setState({actWindow: "addMenu"});
+    }
+    scheduleMenuSwitch(){
+        this.setState({actWindow: "scheduleMenu"});
+    }
+    libraryWindowSwitch(cb){
+        this.setState({actWindow: "libraryMenu", librarySelectCallback: cb});
+    }
+    closeWindows(){
+        this.setState({actWindow: ""});
     }
     handleTabChange(ev, newVal){
         this.setState({tab: newVal});
@@ -67,22 +88,22 @@ export default class Panel extends React.Component{
     }
 
     render(){
-        const s = {
-            display: "none"
-        }
-        if(this.state.isAddWindowVisible)
-            s.display ="block";
-
         let site = "";
-        if(this.state.actSite == "Library")
+        if(this.state.actSite === "Library")
             site = (<Library/>);
-        if(this.state.actSite == "Playlist")
-            site = (<Playlist/>);
+        if(this.state.actSite === "Playlist")
+            site = (<Playlist scheduleMenuSwitch={()=>{this.scheduleMenuSwitch()}} ref={this.state.playlistRef}/>);
+        let window = "";
+        if(this.state.actWindow === "addMenu")
+            window = (<AddMenu close={()=>{this.closeWindows()}}/>);
+        if(this.state.actWindow === "scheduleMenu")
+            window = (<ScheduleMenu ref={this.state.scheduleRef} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} close={()=>{this.closeWindows()}}/>);
+        if(this.state.actWindow === "libraryMenu")
+            window = (<Library isWindowed={true} selectCallback={this.state.librarySelectCallback}/>);
         return (
             <React.Fragment>
-                {site}
+                {site}{window}
                 <Notifications notifications={this.state.notifications}/>
-                <AddMenu isVisible={this.state.isAddWindowVisible} close={()=>{this.setState({isAddWindowVisible:false})}}/>
                 <Toolbar playerData={this.state.playerData} addWindowSwitch={()=>{this.addWindowSwitch()}} toggleSettings={()=>this.toggleSettings()}/>
                 <Settings open={this.state.settingsOpen} close={()=>this.toggleSettings()} 
                     openLibrary={()=>this.openLibrary()} openPlaylist={()=>this.openPlaylist()}/>

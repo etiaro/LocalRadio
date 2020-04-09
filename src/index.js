@@ -10,6 +10,9 @@ import {database} from './database/database';
 import {player as playerController} from './player/player';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
+import http from 'http';
+import https from 'https';
 
 database.init(cfg.db);
 
@@ -34,9 +37,14 @@ app.use(express.static(path.join(__dirname, '../public/build/')));
 app.use(notFound);
 
 // Start
-app.listen(80, () => {
-    console.log(`Server is up!`);
-});
+var httpServ = http.createServer(app);
+httpServ.listen(80);
+
+var privateKey  = fs.readFileSync(path.join(__dirname, '/alice.key'), 'utf8');
+var certificate  = fs.readFileSync(path.join(__dirname, '/alice.crt'), 'utf8');
+var httpsServ = https.createServer({key: privateKey, cert: certificate}, app);
+httpsServ.listen(443);
+
 
 
 playerController.startPlaylistWatchman();

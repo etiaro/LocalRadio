@@ -10,14 +10,28 @@ export default () => {
 
     // /api/player
     api.post('/list', checkPerm, (req, res, next) => {
-        player.findSong(req.body.songData, (result)=>{
-            res.status(200).send({msg: "query accepted", result: result});
+        player.findSong(req.body.songData, (result, totalNum)=>{
+            res.status(200).send({msg: "query accepted", result: result, totalNum: totalNum});
         });
     });
-    api.get('/playlist', checkPerm, (req, res, next)=> {
+    api.post('/getplaylist', checkPerm, (req, res, next)=> {
         player.getPlaylist(req.body.date, (data)=>{
             return res.status(200).send({amplifier: data[0], playlist: data[1]});
         });
+    });
+    api.post('/playlist', checkPerm, (req, res, next)=> {
+        if(req.body.entry){
+            player.changePlaylist(req.body.entry)
+            return res.status(200).send({msg: "query accepted"});
+        }else
+            return res.status(500).send({msg:"no entry entered"})
+    });
+    api.post('/schedule', checkPerm, (req, res, next)=> {
+        if(req.body.schedule){
+            player.changeSchedule(req.body.schedule)
+            return res.status(200).send({msg: "query accepted"});
+        }else
+            return res.status(500).send({msg:"no schedule entered"})
     });
     api.post('/play', checkPerm, (req, res, next) => { 
         if(req.body.shufflePlay){

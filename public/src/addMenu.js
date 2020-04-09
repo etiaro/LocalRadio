@@ -49,25 +49,23 @@ export default class AddMenu extends React.Component {
         this.setState({tab: newValue});
     }
     render(){
-        let style = {display: 'none'};
-        if(this.props.isVisible)
-            style = {display: 'block', maxWidth: "calc(100vw - 2em)"};
-
-        return (<Paper id="addPaper" elevation={2} square={true} style={style}>
+        return (<Paper className="window" elevation={2} square={true}>
             <TabBar>
                 <p>Dodawanie Ścieżki</p>
                 <CloseBtn color="inherit" onClick={() => this.props.close()}>
                     <CloseIcon />
                 </CloseBtn>
             </TabBar>
-            <Tabs value={this.state.tab} onChange={(e, n)=>this.handleChange(e, n)} aria-label="download method tabs">
-                <Tab label="Youtube" id="YT" aria-controls="youtube-tab" />
-            </Tabs>
-            <UrlInput id="standard-dense" label={"URL"}  margin="dense" onChange={(e)=>this.handleURLChange(e)} value={this.state.url} />
-            <p>Enter URL of video or playlist</p>
-            <DownloadBtn variant="contained" color="primary" onClick={() => { this.downloadCall(); }}>
-                Download
-            </DownloadBtn>
+            <div className="window-content">
+                <Tabs value={this.state.tab} onChange={(e, n)=>this.handleChange(e, n)} aria-label="download method tabs">
+                    <Tab label="Youtube" id="YT" aria-controls="youtube-tab" />
+                </Tabs>
+                <UrlInput label={"URL"}  margin="dense" onChange={(e)=>this.handleURLChange(e)} value={this.state.url} />
+                <p>Enter URL of video or playlist</p>
+                <DownloadBtn variant="contained" color="primary" onClick={() => { this.downloadCall(); }}>
+                    Download
+                </DownloadBtn>
+            </div>
         </Paper>);
     }
 }

@@ -6,7 +6,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import { LibraryBooks, PlaylistAddCheck} from '@material-ui/icons';
+import { LibraryBooks, PlaylistAddCheck, GitHub} from '@material-ui/icons';
 
 
 
@@ -22,15 +22,25 @@ export default function Settings(props) {
     return (
         <Drawer anchor="right" open={props.open} onClose={props.close}>
             <List className={classes.pickMenu}>
+                <ListItem button onClick={()=>openGithub()}>
+                    <ListItemIcon><GitHub/></ListItemIcon>
+                    <ListItemText primary="Github" />
+                </ListItem>
                 <ListItem button onClick={()=>props.openLibrary()}>
-                <ListItemIcon><LibraryBooks/></ListItemIcon>
-                <ListItemText primary="Library" />
+                    <ListItemIcon><LibraryBooks/></ListItemIcon>
+                    <ListItemText primary="Library" />
                 </ListItem>
                 <ListItem button onClick={()=>props.openPlaylist()}>
-                <ListItemIcon><PlaylistAddCheck/></ListItemIcon>
-                <ListItemText primary="Playlist" />
+                    <ListItemIcon><PlaylistAddCheck/></ListItemIcon>
+                    <ListItemText primary="Playlist" />
                 </ListItem>
             </List>
         </Drawer> 
     );
 };
+
+
+
+function openGithub(){
+    window.open('https://github.com/etiaro/LocalRadio', '_blank');
+}
