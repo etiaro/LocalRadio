@@ -1,9 +1,9 @@
 export default {
     db:{
-        host: "***REMOVED***", 
-        user: "***REMOVED***",
-        password: "***REMOVED***",
-        database: "***REMOVED***",
+        host: "localhost", 
+        user: "user",
+        password: "pass",
+        database: "db_name",
         multipleStatements: true
       }
 };
