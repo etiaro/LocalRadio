@@ -23,16 +23,8 @@ $ npm run dev
 ```sh
 $ npm run build
 ```
+### Run
 
-
-
-
-
-### TO BUILD
-after npm run build you have to add
-```javascript
-require("babel-core/register");
-require("babel-polyfill");
+```sh
+$ npm start
 ```
-and add Music folder to get working non-dev build
-(node index.js/ pm2 start index.js)
