@@ -99,9 +99,9 @@ export default class ScheduleMenu extends React.Component {
         this.setState({enabledTimes: eT},
             ()=>{
                 if(isBeg)
-                    this.inputRefs[ind].begin.current.setSelectionRange(cursor,cursor);
+                    this.inputRefs[ind].begin.current.setSelectionRange(cursor,cursor+1);
                 else
-                    this.inputRefs[ind].end.current.setSelectionRange(cursor,cursor);
+                    this.inputRefs[ind].end.current.setSelectionRange(cursor,cursor+1);
             });
     }
     addTime(pos){
@@ -146,31 +146,31 @@ export default class ScheduleMenu extends React.Component {
             <div className="window-content">
                 <FormGroup row>
                     <FormControlLabel
-                        control={<Checkbox checked={this.state.day[0]} onChange={(e)=>{this.changeDay(e, 0);}} name="day0" />}
+                        control={<Checkbox checked={this.state.day[1]} onChange={(e)=>{this.changeDay(e, 1);}} name="day0" />}
                         label="Pon"
                     />
                     <FormControlLabel
-                        control={<Checkbox checked={this.state.day[1]} onChange={(e)=>{this.changeDay(e, 1);}} name="day1" />}
+                        control={<Checkbox checked={this.state.day[2]} onChange={(e)=>{this.changeDay(e, 2);}} name="day1" />}
                         label="Wt"
                     />
                     <FormControlLabel
-                        control={<Checkbox checked={this.state.day[2]} onChange={(e)=>{this.changeDay(e, 2);}} name="day2" />}
+                        control={<Checkbox checked={this.state.day[3]} onChange={(e)=>{this.changeDay(e, 3);}} name="day2" />}
                         label="Śr"
                     />
                     <FormControlLabel
-                        control={<Checkbox checked={this.state.day[3]} onChange={(e)=>{this.changeDay(e, 3);}} name="day3" />}
+                        control={<Checkbox checked={this.state.day[4]} onChange={(e)=>{this.changeDay(e, 4);}} name="day3" />}
                         label="Czw"
                     />
                     <FormControlLabel
-                        control={<Checkbox checked={this.state.day[4]} onChange={(e)=>{this.changeDay(e, 4);}} name="day4" />}
+                        control={<Checkbox checked={this.state.day[5]} onChange={(e)=>{this.changeDay(e, 5);}} name="day4" />}
                         label="Pt"
                     />
                     <FormControlLabel
-                        control={<Checkbox checked={this.state.day[5]} onChange={(e)=>{this.changeDay(e, 5);}} name="day5" />}
+                        control={<Checkbox checked={this.state.day[6]} onChange={(e)=>{this.changeDay(e, 6);}} name="day5" />}
                         label="Sob"
                     />
                     <FormControlLabel
-                        control={<Checkbox checked={this.state.day[6]} onChange={(e)=>{this.changeDay(e, 6);}} name="day6" />}
+                        control={<Checkbox checked={this.state.day[0]} onChange={(e)=>{this.changeDay(e, 0);}} name="day6" />}
                         label="Ndz"
                     />
                 </FormGroup>
@@ -180,12 +180,7 @@ export default class ScheduleMenu extends React.Component {
                 {communicate}
                 {this.state.enabledTimes.map((time, ind) => (
                     <div key={ind}>
-                        <Grid
-                            container
-                            direction="row"
-                            justify="center"
-                            alignItems="center"
-                            >
+                        <Grid container direction="row" justify="center" alignItems="center">
                             <HourInput inputRef={this.inputRefs[ind].begin} size="small" label="Begin" variant="outlined" onChange={(e)=>{this.changeTime(e, ind, true);}} value={this.formatTime(time.begin)}/>
                             <Typography component="span">
                                 {"->"}

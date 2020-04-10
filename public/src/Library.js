@@ -2,15 +2,31 @@ import React, { useState, useEffect } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
+import List from '@material-ui/core/List';
+import ListItem2 from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ListItem from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
-import { IconButton } from '@material-ui/core';
-import {PlayArrow as PlayIcon} from '@material-ui/icons';
+import AppBar from '@material-ui/core/AppBar';
+import IconButton from '@material-ui/core/IconButton';
+import { styled } from '@material-ui/core/styles';
+import {Close as CloseIcon,PlayArrow as PlayIcon} from '@material-ui/icons';
 
 
 import {findSong, playSong} from './ApiConnection';
+
+
+const CloseBtn = styled(IconButton)({
+  position:"absolute",
+  right: 0,
+  top: 0
+});
+const TabBar = styled(AppBar)({
+  position:"absolute",
+  top:0,
+  fontSize: "large"
+});
 
 const useStyles = makeStyles(theme => ({
   root:{
@@ -62,14 +78,18 @@ export default function Library(props) {
   const [totalNum, setTotalNum] = useState(-1);
   const isWindowed = props.isWindowed;
  
-  useEffect(()=>{  
+  useEffect(()=>{
+    var isMounted = true;
     if(totalNum !== songs.length){
       findSong({songData:{name: search, site: site}}, (res, totalNum)=>{
-        isLoading(false);
-        setTotalNum(totalNum);
-        setSongs(res);
+        if(isMounted){
+          isLoading(false);
+          setTotalNum(totalNum);
+          setSongs(res);
+        }
       });
     }
+    return ()=>{isMounted = false;}
   }, [search, site, totalNum, songs]);
 
   function handleSearchChange(event){
@@ -78,7 +98,7 @@ export default function Library(props) {
   }
 
   function handleScroll(e){
-    if(!loading && e.target.scrollTop >= (e.target.scrollHeight - e.target.offsetHeight)){
+    if(!loading && e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 50){
         isLoading(true);
         setSite(site+1);
     }
@@ -93,55 +113,77 @@ export default function Library(props) {
     res+= t+" seconds";
     return res;
   }
-  var LoadingWheel = songs.length !== totalNum ?(<CircularProgress className={classes.loadingWheel}/>):null;
-
-  let songList = ({});
-  if(!isWindowed){
-    songList = songs.map(song => (
-      <ListItem key={song.ytid} className={classes.item}>
-          <div className={classes.texts}>
-              <Typography variant="h5" component="h3" className={classes.title}>
-              {song.name}
-              </Typography>
-              <Typography component="p" className={classes.author}>
-              {song.author}
-              </Typography>
-              <Typography component="p" className={classes.time}>
-              {translateTime(song.length)}
-              </Typography>
-          </div>
-          <IconButton className={classes.button} onClick={()=>playSong(song.file, song.name, song.length)}>
-              <PlayIcon/>
-          </IconButton>
-      </ListItem>
-      ));
-  }else{
-    songList = songs.map(song => (
-      <ListItem key={song.ytid} className={classes.item}>
-          <div className={classes.texts}>
-              <Typography variant="h5" component="h3" className={classes.title}>
-              {song.name}
-              </Typography>
-              <Typography component="p" className={classes.author}>
-              {song.author}
-              </Typography>
-              <Typography component="p" className={classes.time}>
-              {translateTime(song.length)}
-              </Typography>
-          </div>
-      </ListItem>
-      ));
+  function selectItem(ytid){
+    props.selectCallback(ytid);
+    props.close();
   }
 
-  return (
-    <div className="Library" onScroll={(e)=>handleScroll(e)}>
-        <Paper className={classes.searchPaper}>
-            <TextField className={classes.TextField} label={"Search"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
-        </Paper>
-        <Paper className={classes.root}>
-            {songList}
+  var LoadingWheel = songs.length !== totalNum ?(<CircularProgress className={classes.loadingWheel}/>):null;
+
+  if(!isWindowed){
+    return (
+      <div className="Library" onScroll={(e)=>handleScroll(e)}>
+          <Paper className={classes.searchPaper}>
+              <TextField className={classes.TextField} label={"Search"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
+          </Paper>
+          <Paper className={classes.root}>
+            {songs.map(song => (
+              <ListItem key={song.ytid} className={classes.item}>
+                <div className={classes.texts}>
+                  <Typography variant="h5" component="h3" className={classes.title}>
+                  {song.name}
+                  </Typography>
+                  <Typography component="p" className={classes.author}>
+                  {song.author}
+                  </Typography>
+                  <Typography component="p" className={classes.time}>
+                  {translateTime(song.length)}
+                  </Typography>
+                </div>
+                <IconButton className={classes.button} onClick={()=>playSong(song.file, song.name, song.length)}>
+                  <PlayIcon/>
+                </IconButton>
+              </ListItem>
+            ))}
             {LoadingWheel}
-        </Paper>
-    </div>
-  );
+          </Paper>
+      </div>
+    );
+  }else{
+    return (
+      <Paper className="window" elevation={2} square={true}>
+        <TabBar>
+            <p>Schedule</p>
+            <CloseBtn color="inherit" onClick={() => props.close()}>
+                <CloseIcon />
+            </CloseBtn>
+        </TabBar>
+        <div className="window-content" onScroll={(e)=>handleScroll(e)}>
+            <Paper className={classes.searchPaper}>
+                <TextField className={classes.TextField} label={"Search"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
+            </Paper>
+            <Paper className={classes.root}>
+              <List>
+                {songs.map(song => (
+                  <ListItem2 button key={song.ytid} className={classes.item} onClick={()=>{selectItem(song.ytid)}}>
+                    <div className={classes.texts}>
+                      <Typography variant="h5" component="h3" className={classes.title}>
+                      {song.name}
+                      </Typography>
+                      <Typography component="p" className={classes.author}>
+                      {song.author}
+                      </Typography>
+                      <Typography component="p" className={classes.time}>
+                      {translateTime(song.length)}
+                      </Typography>
+                    </div>
+                  </ListItem2>
+                ))}
+              </List>
+              {LoadingWheel}
+            </Paper>
+        </div>
+      </Paper>
+    );
+  }
 }

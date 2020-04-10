@@ -28,4 +28,5 @@ body{
     overflow: scroll;
     height: 95vh;
     text-align: center;
+    position: relative;
 }

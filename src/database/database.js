@@ -236,18 +236,30 @@ export const database = Object.assign({}, {
         entry.date = entry.date.getTime();
       entry.date = Math.floor(entry.date/1000);
       if(entry.id){
-        var query = "UPDATE playlist SET";
-        query += !!entry.ytid ? " ytid="+entry.ytid : "";
-        query += !!entry.date ? " date="+entry.date : "";
-        query += !!entry.was ? " was="+entry.was : "";
-        query+= " WHERE id="+entry.id;
-        this.con.query(query,
-        (err, result, fields) => {
-          if(err) console.log(err);
-          else{
-            if(cb) cb(result);
-          }
-        });
+        if(entry.delete){
+          var query = "DELETE FROM playlist";
+          query+= " WHERE id="+entry.id;
+          this.con.query(query,
+          (err, result, fields) => {
+            if(err) console.log(err);
+            else{
+              if(cb) cb(result);
+            }
+          });
+        }else{
+          var query = "UPDATE playlist SET";
+          query += !!entry.ytid ? " ytid="+entry.ytid : "";
+          query += !!entry.date ? " date="+entry.date : "";
+          query += !!entry.was ? " was="+entry.was : "";
+          query+= " WHERE id="+entry.id;
+          this.con.query(query,
+          (err, result, fields) => {
+            if(err) console.log(err);
+            else{
+              if(cb) cb(result);
+            }
+          });
+        }
       }else
         this.con.query("INSERT INTO `playlist`(`ytid`, date) VALUES ('"+entry.ytid+"', FROM_UNIXTIME("+entry.date+"))",
           (err, result, fields) => {
@@ -303,7 +315,7 @@ export const database = Object.assign({}, {
           songs[songInd].length = parseInt(songs[songInd].length)
           beginning = new Date(Math.max(new Date(songs[songInd].date*1000), beginning));
           while(actSchInd < schedule.length && (schedule[actSchInd].end.hour < beginning.getHours() || 
-                (schedule[actSchInd].end.hour == beginning.getHours() && schedule[actSchInd].end.minutes < beginning.getMinutes()))){
+                (schedule[actSchInd].end.hour == beginning.getHours() && schedule[actSchInd].end.minutes <= beginning.getMinutes()))){
                   actSchInd++;
           }
           if(actSchInd == schedule.length){ 

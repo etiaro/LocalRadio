@@ -142,11 +142,13 @@ function findSong(songData, cb){
     xmlHttp.open( "POST", adress+"player/list", cb!=null ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
-    if(cb!=null)
+    if(cb!=null){
         xmlHttp.onload = ()=>{
             var resp = JSON.parse(xmlHttp.responseText);
             cb(resp.result, resp.totalNum);
         };
+        xmlHttp.onerror = HANDLEERROR;
+    }
     xmlHttp.send(JSON.stringify(songData));
     if(cb==null)
         return JSON.parse(xmlHttp.responseText).result;
@@ -244,7 +246,7 @@ function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist){
                     actNotID.playlist = res.notID;
                 }
             }catch(e){
-                console.error(xmlHttp.statusText);
+                console.error(e);
             }
           };
         xmlHttp.onerror = HANDLEERROR;

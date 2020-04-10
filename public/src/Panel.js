@@ -47,7 +47,7 @@ export default class Panel extends React.Component{
             this.setState({playerData:data});
         }, (data, data2)=>{
             this.state.playlistRef.current.updateData();
-            if(data2)
+            if(data2 && this.state.scheduleRef.current)
                 this.state.scheduleRef.current.updateData();
         });
         getPlayerData((res)=>{
@@ -92,14 +92,14 @@ export default class Panel extends React.Component{
         if(this.state.actSite === "Library")
             site = (<Library/>);
         if(this.state.actSite === "Playlist")
-            site = (<Playlist scheduleMenuSwitch={()=>{this.scheduleMenuSwitch()}} ref={this.state.playlistRef}/>);
+            site = (<Playlist libraryShow={(cb)=>this.libraryWindowSwitch(cb)} scheduleMenuSwitch={()=>{this.scheduleMenuSwitch()}} ref={this.state.playlistRef}/>);
         let window = "";
         if(this.state.actWindow === "addMenu")
             window = (<AddMenu close={()=>{this.closeWindows()}}/>);
         if(this.state.actWindow === "scheduleMenu")
-            window = (<ScheduleMenu ref={this.state.scheduleRef} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} close={()=>{this.closeWindows()}}/>);
+            window = (<ScheduleMenu ref={this.state.scheduleRef} close={()=>{this.closeWindows()}}/>);
         if(this.state.actWindow === "libraryMenu")
-            window = (<Library isWindowed={true} selectCallback={this.state.librarySelectCallback}/>);
+            window = (<Library isWindowed={true} selectCallback={this.state.librarySelectCallback} close={()=>{this.closeWindows()}}/>);
         return (
             <React.Fragment>
                 {site}{window}
