@@ -2,5 +2,6 @@
 node_modules
 .DS_store
 *.mp3
-/dist
-/src/config/database.js
+dist
+src/config/database.js
+public/.vs/*
