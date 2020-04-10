@@ -13,6 +13,7 @@ import path from 'path';
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
+import "regenerator-runtime/runtime.js";
 
 database.init(cfg.db);
 

@@ -44,9 +44,16 @@ export const player = Object.assign({}, {
     playSong(fileName, name, length){
         this.clearLastPlay();
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
-        this.audio = this.p.play('./Music/'+fileName, function(err){
-            if (err) throw err;
-        });
+		if(fs.existsSync('./Music/'+fileName))
+			this.audio = this.p.play('./Music/'+fileName, function(err){
+				if (err) throw err;
+			});
+		else if(fs.existsSync('../Music/'+fileName))
+			this.audio = this.p.play('../Music/'+fileName, function(err){
+				if (err) throw err;
+			});
+		else
+			throw "playing failed. File not found!";
         player.startTime = new Date();
         player.songInfo.name = name;
         player.songInfo.length = length;

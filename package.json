@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf ./dist && babel ./src -d ./dist",
+    "build": "rimraf ./dist && babel ./src -d ./dist && node copy.js",
     "prestart": "npm run -s build",
     "start": "node dist/index.js",
     "dev": "nodemon -w ./src --exec \"babel-node ./src\""
@@ -13,6 +13,7 @@
   "author": "Jakub Klimek",
   "license": "ISC",
   "dependencies": {
+    "File": "^0.10.2",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
     "express": "^4.16.3",
