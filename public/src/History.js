@@ -11,10 +11,12 @@ import TextField from '@material-ui/core/TextField';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import { styled } from '@material-ui/core/styles';
+import DateFnsUtils from '@date-io/date-fns';
+import {MuiPickersUtilsProvider,KeyboardDatePicker} from '@material-ui/pickers';
 import {Close as CloseIcon,PlayArrow as PlayIcon} from '@material-ui/icons';
 
 
-import {findSong, playSong} from './ApiConnection';
+import {getHistory} from './ApiConnection';
 
 
 const CloseBtn = styled(IconButton)({
@@ -47,6 +49,10 @@ const useStyles = makeStyles(theme => ({
     fontSize: '0.8em',
     color: 'GRAY'
   },
+  startTime:{
+    fontSize: '0.8em',
+    color: 'GRAY'
+  },
   searchPaper:{
     margin: 15,
     padding: 5,
@@ -69,19 +75,18 @@ const useStyles = makeStyles(theme => ({
 }));
 
 
-export default function Library(props) {
+export default function History(props) {
   const classes = useStyles();
-  const [search, setSearch] = useState("");
+  const [date, setDate] = useState(new Date());
   const [site, setSite] = useState(1);
   const [songs,  setSongs] = useState([]);
   const [loading, isLoading] = useState(true);
   const [totalNum, setTotalNum] = useState(-1);
-  const isWindowed = props.isWindowed;
  
   useEffect(()=>{
     var isMounted = true;
     if(!songs || totalNum !== songs.length){
-      findSong({songData:{name: search, site: site}}, (res, totalNum)=>{
+      getHistory(date, site, (res, totalNum)=>{
         if(isMounted){
           isLoading(false);
           setTotalNum(totalNum);
@@ -89,15 +94,19 @@ export default function Library(props) {
         }
       });
     }
+    document.getElementsByClassName("History")[0].parentElement.onscroll = handleScroll;
     return ()=>{isMounted = false;}
-  }, [search, site, totalNum, songs]);
+  }, [date, site, totalNum, songs]);
 
-  function handleSearchChange(event){
+  function handleDateChange(d){
+    d = new Date(d);
+    if(isNaN(d)) d = new Date();
     setTotalNum(-1);
-    setSearch(event.target.value);
+    setDate(d);
   }
 
   function handleScroll(e){
+    console.log(e.target.offsetHeight + e.target.scrollTop,  e.target.scrollHeight - 50)
     if(!loading && e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 50){
         isLoading(true);
         setSite(site+1);
@@ -113,22 +122,24 @@ export default function Library(props) {
     res+= t+" seconds";
     return res;
   }
-  function selectItem(ytid){
-    props.selectCallback(ytid);
-    props.close();
-  }
+
   var LoadingWheel = songs && songs.length !== totalNum ?(<CircularProgress className={classes.loadingWheel}/>):null;
 
   if(!songs) return(<div/>)
-  if(!isWindowed){
-    return (
-      <div className="Library" onScroll={(e)=>handleScroll(e)}>
-          <Paper className={classes.searchPaper}>
-              <TextField className={classes.TextField} label={"Search"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
-          </Paper>
-          <Paper className={classes.root}>
-            {songs.map(song => (
-              <ListItem key={song.ytid} className={classes.item}>
+  return (
+    <div className="History" onScroll={(e)=>handleScroll(e)}>
+        <Paper className={classes.searchPaper}>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <KeyboardDatePicker className={classes.selectItem} margin="normal" label="Date" value={date} onChange={(d)=>handleDateChange(d)}/>
+          </MuiPickersUtilsProvider>
+        </Paper>
+        <Paper className={classes.root}>
+          {songs.map(song => (
+            <div key={song.id}>
+              <Typography component="p" className={classes.startTime}>
+                {new Date(song.date).toLocaleDateString()+" "+new Date(song.date).toLocaleTimeString()}
+              </Typography>
+              <ListItem className={classes.item}>
                 <div className={classes.texts}>
                   <Typography variant="h5" component="h3" className={classes.title}>
                   {song.name}
@@ -140,50 +151,11 @@ export default function Library(props) {
                   {translateTime(song.length)}
                   </Typography>
                 </div>
-                <IconButton className={classes.button} onClick={()=>playSong(song.file, song.name, song.length, song.ytid)}>
-                  <PlayIcon/>
-                </IconButton>
               </ListItem>
-            ))}
-            {LoadingWheel}
-          </Paper>
-      </div>
-    );
-  }else{
-    return (
-      <Paper className="window" elevation={2} square={true}>
-        <TabBar>
-            <p>Biblioteka</p>
-            <CloseBtn color="inherit" onClick={() => props.close()}>
-                <CloseIcon />
-            </CloseBtn>
-        </TabBar>
-        <div className="window-content" onScroll={(e)=>handleScroll(e)}>
-            <Paper className={classes.searchPaper}>
-                <TextField className={classes.TextField} label={"Search"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
-            </Paper>
-            <Paper className={classes.root}>
-              <List>
-                {songs.map(song => (
-                  <ListItem2 button key={song.ytid} className={classes.item} onClick={()=>{selectItem(song.ytid)}}>
-                    <div className={classes.texts}>
-                      <Typography variant="h5" component="h3" className={classes.title}>
-                      {song.name}
-                      </Typography>
-                      <Typography component="p" className={classes.author}>
-                      {song.author}
-                      </Typography>
-                      <Typography component="p" className={classes.time}>
-                      {translateTime(song.length)}
-                      </Typography>
-                    </div>
-                  </ListItem2>
-                ))}
-              </List>
-              {LoadingWheel}
-            </Paper>
-        </div>
-      </Paper>
-    );
-  }
+            </div>
+          ))}
+          {LoadingWheel}
+        </Paper>
+    </div>
+  );
 }

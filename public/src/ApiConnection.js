@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Panel from './Panel';
+import UserHome from './UserHome';
 import Login from './Login';
 import Cookies from 'universal-cookie';
 
@@ -11,7 +12,6 @@ function HANDLEERROR(err){
 }
 
 
-//TODO add onerror everywhere to handle connection problems 
 
 function makeid(length) {
     var result           = '';
@@ -44,7 +44,7 @@ function getUserData(cb, errCb){
     xmlHttp.send(null);
     if(cb==null)
         return xmlHttp.responseText;
-}//TODO getStatusData(i propably meant amplifier status)
+}
 
 
 function login(response, cb){
@@ -95,7 +95,7 @@ function downloadSong(ytUrl){
     xmlHttp.send('{"url": "'+ytUrl+'"}');
     return false;
 }
-function playSong(fileName, songName, length){
+function playSong(fileName, songName, length, ytid){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/play");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
@@ -105,7 +105,7 @@ function playSong(fileName, songName, length){
         if(xmlHttp.status !== 200)
             HANDLEERROR(xmlHttp.responseText);
      }
-    xmlHttp.send(JSON.stringify({fileName:fileName, songName:songName, length:length}));
+    xmlHttp.send(JSON.stringify({fileName:fileName, songName:songName, length:length, ytid:ytid}));
     return false;
 }
 function switchShuffle(play){
@@ -153,7 +153,54 @@ function findSong(songData, cb){
     if(cb==null)
         return JSON.parse(xmlHttp.responseText).result;
 }
-
+function getHistory(date, site, cb){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "POST", adress+"player/history", cb!=null ); // false for synchronous request
+    xmlHttp.setRequestHeader("Content-Type", "application/json");
+    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    if(cb!=null){
+        xmlHttp.onload = ()=>{
+            var resp = JSON.parse(xmlHttp.responseText);
+            cb(resp.result, resp.totalNum);
+        };
+        xmlHttp.onerror = HANDLEERROR;
+    }
+    xmlHttp.send(JSON.stringify({date:date, site:site}));
+    if(cb==null)
+        return JSON.parse(xmlHttp.responseText).result;
+}
+function suggest(data, cb){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "POST", adress+"player/suggest", cb!=null ); // false for synchronous request
+    xmlHttp.setRequestHeader("Content-Type", "application/json");
+    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    if(cb!=null){
+        xmlHttp.onload = ()=>{
+            var resp = JSON.parse(xmlHttp.responseText);
+            cb(resp.result);
+        };
+        xmlHttp.onerror = HANDLEERROR;
+    }
+    xmlHttp.send(JSON.stringify({data:data}));
+    if(cb==null)
+        return JSON.parse(xmlHttp.responseText).result;
+}
+function getSuggestions(settings, cb){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "POST", adress+"player/suggestions", cb!=null ); // false for synchronous request
+    xmlHttp.setRequestHeader("Content-Type", "application/json");
+    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    if(cb!=null){
+        xmlHttp.onload = ()=>{
+            var resp = JSON.parse(xmlHttp.responseText);
+            cb(resp.result, resp.totalNum);
+        };
+        xmlHttp.onerror = HANDLEERROR;
+    }
+    xmlHttp.send(JSON.stringify({data:settings}));
+    if(cb==null)
+        return JSON.parse(xmlHttp.responseText).result;
+}
 function changePage(){
     getUserData((userData)=>{
         try{
@@ -162,7 +209,9 @@ function changePage(){
             if(!userData.loggedIn){
                 ReactDOM.render(<Login />, document.getElementById('root'));
             }else if(userData.isAdmin){
-                ReactDOM.render(<Panel userData={JSON.stringify(userData)}/>, document.getElementById('root'));
+                ReactDOM.render(<Panel userData={userData}/>, document.getElementById('root'));
+            }else{
+                ReactDOM.render(<UserHome userData={userData}/>, document.getElementById('root'));
             }
         }catch(err){
             ReactDOM.render(<Login />, document.getElementById('root'));
@@ -258,4 +307,4 @@ function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist){
     }, 0);
 }
 
-export {getUserData, changePage, login as apiLogin, findSong, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData};
+export {getUserData, changePage, login as apiLogin, findSong, getHistory, getSuggestions, suggest, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData};

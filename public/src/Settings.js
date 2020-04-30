@@ -6,7 +6,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import { LibraryBooks, PlaylistAddCheck, GitHub} from '@material-ui/icons';
+import { LibraryBooks, PlaylistAddCheck, History, GitHub} from '@material-ui/icons';
 
 
 
@@ -33,6 +33,10 @@ export default function Settings(props) {
                 <ListItem button onClick={()=>props.openPlaylist()}>
                     <ListItemIcon><PlaylistAddCheck/></ListItemIcon>
                     <ListItemText primary="Playlist" />
+                </ListItem>
+                <ListItem button onClick={()=>props.openHistory()}>
+                    <ListItemIcon><History/></ListItemIcon>
+                    <ListItemText primary="History" />
                 </ListItem>
             </List>
         </Drawer> 

@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/styles';
 import Paper from '@material-ui/core/Paper';
+import Container from '@material-ui/core/Container';
 import Typography from '@material-ui/core/Typography';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -16,6 +17,10 @@ import {MuiPickersUtilsProvider,KeyboardDatePicker} from '@material-ui/pickers';
 
 import {getPlaylistData, sendPlaylistData} from './ApiConnection';
 
+function isOverflowing(el){
+  return el.offsetWidth < el.scrollWidth;
+}
+
 const useStyles = theme => ({
   item: {
     textAlign: "left",
@@ -25,13 +30,19 @@ const useStyles = theme => ({
   title:{
       fontSize: '1em'
   },
+  titleCont:{
+    padding:0,
+    maxWidth: "100%",
+    width: "fit-content",
+    whiteSpace: "nowrap",
+    overflow: "hidden"
+  },
   author:{
       fontSize: '0.8em',
   },
   selectPaper:{
     margin: 15,
-    padding: 5,
-    textAlign: "left"
+    padding: 5
   },
   selectItem:{
     display: 'inline-block',
@@ -39,7 +50,19 @@ const useStyles = theme => ({
   },
   texts:{
     display: 'inline-block',
-    maxWidth: "calc(100% - 50px)"
+    maxWidth: "calc(100% - 60px)"
+  },
+  scrollable:{
+      animation: `$scrollEffect 5000ms infinite linear`,
+      width: "fit-content"
+  },
+  "@keyframes scrollEffect": {
+      "0%": {
+      transform: "translateX(100%)"
+      },
+      "100%": {
+      transform: "translateX(-100%)"
+      }
   },
   root:{
     margin: "20px 0 20px 0"
@@ -70,10 +93,12 @@ const useStyles = theme => ({
 function Options(props) {
   var style = {position:"absolute", top:0, left:"calc(50% - 125px)", width: 250};
 
-  if(props.toppos) 
-    style = Object.assign(style, {display:"block", top:props.toppos});
+  if(props.pos) 
+    style = Object.assign(style, {display:"block", top:props.pos.y, left: props.pos.x});
   else
     style = Object.assign(style, {display:"none"});
+
+  if(props.hidden) style={display:"none"};
 
   return (
     <Paper style={style}>
@@ -102,6 +127,18 @@ class Playlist extends React.Component{
   componentDidMount(){
     this.updateData();
   }
+  componentDidUpdate(){
+    var els = document.getElementsByClassName(this.props.classes.title);
+    Array.prototype.map.call(els, el =>{
+      if(isOverflowing(el.parentNode)){
+        el.classList.add(this.props.classes.scrollable);
+        el.style.animationDuration = el.scrollWidth*20+"ms";
+      }else{
+        el.classList.remove(this.props.classes.scrollable);
+      }
+    })
+    
+  }
   updateData = ()=>{
     getPlaylistData(this.state.date, (res)=>{
       this.setState({playlist:res});
@@ -110,7 +147,6 @@ class Playlist extends React.Component{
   handleDateChange(newDate){
     newDate = new Date(newDate);
     if(isNaN(newDate)) newDate = new Date();
-    console.log(newDate);
     this.setState({date:newDate}, ()=>{
       this.updateData();
     });
@@ -158,13 +194,14 @@ class Playlist extends React.Component{
     if(cb === undefined) cb = ()=>{};
     this.setState({optionsCollapse: false, optionsCb: cb});
   }
-  showOptions(toppos, songId){
+  showOptions(pos, songId){
+    if(!pos.x) pos = {x:pos.clientX+window.scrollX,y:pos.clientY+window.scrollY}; //gathering from event
     if(this.state.optionsCollapse)
       this.hideOptions(()=>{
-        this.showOptions(toppos);
+        this.showOptions(pos);
       })
     else
-      this.setState({optionsPos: toppos, optionsCb: ()=>{}, optionsCollapse: true, optionsFunctions:{
+      this.setState({optionsPos: pos, optionsCb: ()=>{}, optionsCollapse: true, optionsFunctions:{
         delete: ()=>{sendPlaylistData({id:songId, delete:true}); this.hideOptions()}
       }});
   }
@@ -220,16 +257,20 @@ class Playlist extends React.Component{
     }
 
     return (
-      <div className="Playlist" onClick={(e)=>{if(!e.target.classList.contains(classes.item)) this.hideOptions()}}>
+      <div className="Playlist" onClick={(e)=>{
+        if(![...e.target.classList].some(r=>[classes.item, classes.author, classes.title].indexOf(r) >= 0)) 
+          this.hideOptions()
+      }}>
           <Paper className={classes.selectPaper}>
             <Grid container direction="row" alignItems="center">
               <MuiPickersUtilsProvider utils={DateFnsUtils}>
                 <KeyboardDatePicker className={classes.selectItem} margin="normal" label="Date" value={this.state.date} onChange={(d)=>this.handleDateChange(d)}/>
               </MuiPickersUtilsProvider>
-              
-              <Button className={classes.selectItem} variant="contained" color="primary" onClick={this.props.scheduleMenuSwitch}>
+              {this.props.isAdmin ? 
+              (<Button className={classes.selectItem} variant="contained" color="primary" onClick={this.props.scheduleMenuSwitch}>
                 Schedule
-              </Button>
+              </Button>) 
+              : ""}
             </Grid>
           </Paper>
           
@@ -243,11 +284,13 @@ class Playlist extends React.Component{
                 {time.songs.map((song, ind) => (
                   <div key={song.id}>
                     <ListItem button className={classes.item} elevation={2}
-                      onClick={(e)=>this.showOptions(e.target.offsetTop, song.id)}>
+                      onClick={(e)=>this.showOptions(e, song.id)}>
                       <div className={classes.texts}>
-                        <Typography variant="h5" component="h3" className={classes.title}>
-                        {song.name}
-                        </Typography>
+                        <Container className={classes.titleCont}>
+                          <Typography variant="h5" component="h3" className={classes.title}>
+                          {song.name}
+                          </Typography>
+                        </Container>
                         <Typography component="p" className={classes.author}>
                         {song.author}
                         </Typography>
@@ -268,8 +311,8 @@ class Playlist extends React.Component{
             </Typography>
             </div>
           ))}
-          <Options optionsFunctions={this.state.optionsFunctions}
-          toppos={this.state.optionsPos} collapse={this.state.optionsCollapse} exitCb={()=>{this.state.optionsCb()}}/>
+          <Options hidden={!this.props.isAdmin} optionsFunctions={this.state.optionsFunctions}
+          pos={this.state.optionsPos} collapse={this.state.optionsCollapse} exitCb={()=>{this.state.optionsCb()}}/>
       </div>
     );
   }

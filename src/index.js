@@ -4,7 +4,6 @@ import { notFound, catchErrors } from './middlewares/errors';
 import login from "./routes/login";
 import player from "./routes/player";
 import notification from './routes/notification';
-import settings from './routes/settings';
 import cfg from './config/database';
 import {database} from './database/database';
 import {player as playerController} from './player/player';
@@ -29,7 +28,6 @@ app.use(bodyParser.json());
 app.use('/api/login', login());
 app.use('/api/player', player());
 app.use('/api/notification', notification());
-app.use('/api/settings', settings());
 
 //hosting built react app(front end)
 app.use(express.static(path.join(__dirname, '../public/build/')));

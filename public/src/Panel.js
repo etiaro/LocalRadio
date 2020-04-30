@@ -6,6 +6,7 @@ import AddMenu from "./AddMenu";
 import ScheduleMenu from "./ScheduleMenu";
 import Library from "./Library";
 import Playlist from "./Playlist"; 
+import History from "./History";
 import Notifications from "./Notifications";
 import Settings from "./Settings";
 
@@ -16,10 +17,7 @@ export default class Panel extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            waiting: false,
-            userData: JSON.parse(this.props.userData),
-            isPlaying: false,
-            tab: 0,
+            userData: this.props.userData,
             notifications: [],
             notificationsTimeout: 5000,
             playerData: {song:{}},
@@ -54,9 +52,6 @@ export default class Panel extends React.Component{
             this.setState({playerData: res});
         });
     }
-    changePlaying(){
-        this.setState({isPlaying: !this.state.isPlaying});
-    }
     addWindowSwitch(){
         this.setState({actWindow: "addMenu"});
     }
@@ -68,9 +63,6 @@ export default class Panel extends React.Component{
     }
     closeWindows(){
         this.setState({actWindow: ""});
-    }
-    handleTabChange(ev, newVal){
-        this.setState({tab: newVal});
     }
     toggleSettings(state){
         if(state)    
@@ -86,13 +78,19 @@ export default class Panel extends React.Component{
         this.setState({actSite: "Playlist"});
         this.toggleSettings(false);
     }
+    openHistory(){
+        this.setState({actSite: "History"});
+        this.toggleSettings(false);
+    }
 
     render(){
         let site = "";
         if(this.state.actSite === "Library")
             site = (<Library/>);
         if(this.state.actSite === "Playlist")
-            site = (<Playlist libraryShow={(cb)=>this.libraryWindowSwitch(cb)} scheduleMenuSwitch={()=>{this.scheduleMenuSwitch()}} ref={this.state.playlistRef}/>);
+            site = (<Playlist isAdmin={this.state.userData.isAdmin} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} scheduleMenuSwitch={()=>{this.scheduleMenuSwitch()}} ref={this.state.playlistRef}/>);
+        if(this.state.actSite === "History")
+            site = (<History/>);
         let window = "";
         if(this.state.actWindow === "addMenu")
             window = (<AddMenu close={()=>{this.closeWindows()}}/>);
@@ -104,9 +102,9 @@ export default class Panel extends React.Component{
             <React.Fragment>
                 {site}{window}
                 <Notifications notifications={this.state.notifications}/>
-                <Toolbar playerData={this.state.playerData} addWindowSwitch={()=>{this.addWindowSwitch()}} toggleSettings={()=>this.toggleSettings()}/>
+                <Toolbar isAdmin={this.state.userData.isAdmin} playerData={this.state.playerData} addWindowSwitch={()=>{this.addWindowSwitch()}} toggleSettings={()=>this.toggleSettings()}/>
                 <Settings open={this.state.settingsOpen} close={()=>this.toggleSettings()} 
-                    openLibrary={()=>this.openLibrary()} openPlaylist={()=>this.openPlaylist()}/>
+                    openLibrary={()=>this.openLibrary()} openPlaylist={()=>this.openPlaylist()} openHistory={()=>this.openHistory()}/>
             </React.Fragment>
         );
     }

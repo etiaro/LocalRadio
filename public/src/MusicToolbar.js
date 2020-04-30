@@ -10,6 +10,10 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import {switchShuffle,stopSong} from './ApiConnection';
 import { Menu as MenuIcon, PlayCircleOutline as PlayIcon, PauseCircleOutline as PauseIcon, LibraryAdd as AddIcon, Shuffle} from '@material-ui/icons';
 
+function isOverflowing(el){
+    return el.offsetWidth < el.scrollWidth;
+}
+
 const useStyles = makeStyles(theme => ({
     bar:{
         position: 'fixed',
@@ -45,14 +49,42 @@ const useStyles = makeStyles(theme => ({
         left: 80,
         color: "gray"
     },
+    scrollable:{
+        animation: `$scrollEffect 5000ms infinite linear`,
+        width: "fit-content"
+    },
+    "@keyframes scrollEffect": {
+        "0%": {
+        transform: "translateX(100%)"
+        },
+        "100%": {
+        transform: "translateX(-100%)"
+        }
+    },
     title:{
         position: "absolute",
+        padding: 0,
         left: 120,
         width: "fit-content",
         height: "100%",
         display: "flex",
         alignItems: "center",
+        overflow:"hidden",
+        whiteSpace: "nowrap",
         maxWidth: "calc(100vw - 160px)"
+    },
+    centeredTitle:{
+        position: "absolute",
+        padding: 0,
+        width: "fit-content",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        overflow:"hidden",
+        whiteSpace: "nowrap",
+        maxWidth: "100vw",
+        left:0, 
+        right:0
     },
     state:{
         position: "absolute",
@@ -92,36 +124,60 @@ export default function MusicToolbar(props) {
                 setCompleted((time / props.playerData.song.length)*100);
             }, 100);
         }
+        if(isOverflowing(document.getElementById("titleCont"))){
+            document.getElementById("title").classList.add(classes.scrollable);
+        }else{
+            document.getElementById("title").classList.remove(classes.scrollable);
+        }
         return () => {
             clearInterval(timer);
         };
     }, [props.playerData]);
 
+    var toolbarText = "Radio wyłączone";
+    if(props.playerData.song.name)
+        toolbarText = props.playerData.song.name;
 
-    return (
-        <React.Fragment>
-            <AppBar position="fixed" color="primary" className={classes.bar}>
-                <LinearProgress color="secondary" variant="determinate" value={completed} className={classes.progressBar}/>
-                <Toolbar className={classes.cont}>
-                <IconButton edge="start" color="inherit" aria-label="Open drawer" className={classes.drawerBtn} onClick={props.toggleSettings}>
-                    <MenuIcon />
-                </IconButton>
-                <IconButton color="inherit" onClick={()=>props.addWindowSwitch()}  className={classes.addBtn} >
-                    <AddIcon />
-                </IconButton>
-                <IconButton color="inherit" onClick={()=>playClick()} className={classes.playBtn} >
-                { playIco }
-                </IconButton>
-                <IconButton color="inherit" onClick={()=>switchShuffle()}  className={classes.shuffleBtn} >
-                    <Shuffle style={{color: color}}/>
-                </IconButton>
-                </Toolbar>
-                <Container className={classes.title}>
-                    <Typography component="h2">
-                        {props.playerData.song.name}
-                    </Typography>
-                </Container>
-            </AppBar>
-        </React.Fragment>
-    );
+    if(props.isAdmin)
+        return (
+            <React.Fragment>
+                <AppBar position="fixed" color="primary" className={classes.bar}>
+                    <LinearProgress color="secondary" variant="determinate" value={completed} className={classes.progressBar}/>
+                    <Toolbar className={classes.cont}>
+                    <IconButton edge="start" color="inherit" aria-label="Open drawer" className={classes.drawerBtn} onClick={props.toggleSettings}>
+                        <MenuIcon />
+                    </IconButton>
+                    <IconButton color="inherit" onClick={()=>props.addWindowSwitch()}  className={classes.addBtn} >
+                        <AddIcon />
+                    </IconButton>
+                    <IconButton color="inherit" onClick={()=>playClick()} className={classes.playBtn} >
+                    { playIco }
+                    </IconButton>
+                    <IconButton color="inherit" onClick={()=>switchShuffle()}  className={classes.shuffleBtn} >
+                        <Shuffle style={{color: color}}/>
+                    </IconButton>
+                    </Toolbar>
+                    <Container id="titleCont" className={classes.title}>
+                        <Typography id="title" component="h2">
+                            {toolbarText}
+                        </Typography>
+                    </Container>
+                </AppBar>
+            </React.Fragment>
+        );
+    else
+        return (
+            <React.Fragment>
+                <AppBar position="fixed" color="primary" className={classes.bar}>
+                    <LinearProgress color="secondary" variant="determinate" value={completed} className={classes.progressBar}/>
+                    <Toolbar className={classes.cont}>
+                    </Toolbar>
+                    <Container id="titleCont" className={classes.centeredTitle}>
+                        <Typography id="title" component="h2">
+                            {toolbarText}
+                        </Typography>
+                    </Container>
+                </AppBar>
+            </React.Fragment>
+        )
 }

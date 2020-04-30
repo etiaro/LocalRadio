@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {database} from '../database/database';
 import {player} from '../player/player';
-import {checkPerm} from './login';
+import {checkLogged, checkAdmin} from './login';
 import getYouTubeID from 'get-youtube-id';
 import ytList from "youtube-playlist";
 
@@ -9,31 +9,56 @@ export default () => {
     const api = Router();
 
     // /api/player
-    api.post('/list', checkPerm, (req, res, next) => {
+    api.post('/list', checkLogged, (req, res, next) => {
         player.findSong(req.body.songData, (result, totalNum)=>{
             res.status(200).send({msg: "query accepted", result: result, totalNum: totalNum});
         });
     });
-    api.post('/getplaylist', checkPerm, (req, res, next)=> {
+    api.post('/history', checkLogged, (req, res, next) => {
+        player.getHistory(req.body.date, req.body.site, (result, totalNum)=>{
+            res.status(200).send({msg: "query accepted", result: result, totalNum: totalNum});
+        });
+    });
+    api.post('/suggest', checkLogged, (req, res, next) => {
+        database.updateSuggestion(req.body.data, (response)=>{
+            if(response.err)
+                res.status(500).send({msg:"wrong query", err:response.err});
+            else
+                res.status(200).send({msg: "query accepted", result: response.result});
+        });
+    });
+    api.post('/suggestions', checkLogged, (req, res, next) => {
+        database.getSuggestions(req.body.data, (result, totalNum)=>{
+            res.status(200).send({msg: "query accepted", result: result, totalNum: totalNum});
+        });
+    });
+    api.post('/getplaylist', checkLogged, (req, res, next)=> {
         player.getPlaylist(req.body.date, (data)=>{
             return res.status(200).send({amplifier: data[0], playlist: data[1]});
         });
     });
-    api.post('/playlist', checkPerm, (req, res, next)=> {
-        if(req.body.entry){
-            player.changePlaylist(req.body.entry)
-            return res.status(200).send({msg: "query accepted"});
+    api.post('/playlist', checkLogged, (req, res, next)=> {
+        if(req.body.entry && (req.body.entry.id || req.body.entry.ytid)){
+            if(!!req.body.entry.id)
+                checkAdmin(req,res,()=>{
+                    player.changePlaylist(req.body.entry)
+                    return res.status(200).send({msg: "query accepted"});
+                });
+            else{
+                player.changePlaylist(req.body.entry)
+                return res.status(200).send({msg: "query accepted"});
+            }
         }else
             return res.status(500).send({msg:"no entry entered"})
     });
-    api.post('/schedule', checkPerm, (req, res, next)=> {
+    api.post('/schedule', checkAdmin, (req, res, next)=> {
         if(req.body.schedule){
             player.changeSchedule(req.body.schedule)
             return res.status(200).send({msg: "query accepted"});
         }else
             return res.status(500).send({msg:"no schedule entered"})
     });
-    api.post('/play', checkPerm, (req, res, next) => { 
+    api.post('/play', checkAdmin, (req, res, next) => { 
         if(req.body.shufflePlay){
             player.playShuffle();
             return res.status(200).send({msg: "query accepted"});
@@ -43,20 +68,20 @@ export default () => {
             return res.status(200).send({msg: "query accepted"});
         }
         if(req.body.fileName){
-            player.playSong(req.body.fileName, req.body.songName, req.body.length);
+            player.playSong(req.body.fileName, req.body.songName, req.body.length, req.body.ytid);
             return res.status(200).send({msg: "query accepted"});
         }
         return res.status(500).send({msg: "Query denied. Give filename!"});
     });
-    api.post('/stop', checkPerm, (req, res, next) => { 
+    api.post('/stop', checkAdmin, (req, res, next) => { 
         player.stopPlaying();
         return res.status(200).send({msg: "query accepted"});
     });
-    api.post('/download', checkPerm, (req, res, next) => {
+    api.post('/download', checkAdmin, (req, res, next) => {
         if(req.body.url){
             if(req.body.url.includes("playlist")){
                 res.status(200).send({msg: "query accepted"});
-                ytList(req.body.url, 'id').then(result => {
+                ytList(req.body.url, 'id').then(result => { //TODO show all playlist titless, not first 50(?)
                     var playlist = result.data.playlist;
                     player.downloadSongs(playlist);
                   });
@@ -71,7 +96,7 @@ export default () => {
         return res.status(500).send({msg: "Query denied. Give ytid!"});
     });
 
-    api.post('/data/', checkPerm, (req, res, next)=>{
+    api.post('/data/', checkLogged, (req, res, next)=>{
       return res.status(200).send(player.getInfo());
     })
     return api;
