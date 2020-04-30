@@ -16,12 +16,13 @@ export const notification = Object.assign({}, {
     },
 
     listeners: {},
-    addListener(res, id){
+    addListener(res, id, isAdmin){
         this.listeners[id] = {
             send: (data)=>{
                     res.status(200).send(data);
                   },
-            sent: 0
+            sent: 0,
+            isAdmin: isAdmin
         }
     },
     sendTo(data, id){
@@ -44,9 +45,10 @@ export const notification = Object.assign({}, {
                 }
         }, 200);
     },
-    notify(data){
+    notify(data, adminOnly){
         data.notID = this.notID++;
         for(let id in this.listeners)
-            this.sendTo(data, id);
+            if((adminOnly && this.listeners[id].isAdmin)||!adminOnly)
+                this.sendTo(data, id);
     }
 });

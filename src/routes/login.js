@@ -18,8 +18,7 @@ function validate(req, res, next){
 }
 
 
-
-export const checkPerm = (req, res, next)=>{
+export const checkAdmin = (req, res, next)=>{
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
             return res.status(500).send({message: err.message, data:null});
@@ -28,7 +27,20 @@ export const checkPerm = (req, res, next)=>{
                 req.userInfo = decoded.userInfo;
                 req.userInfo.isAdmin = result.isAdmin;
                 if(!req.userInfo.isAdmin)                   //HERE IS THE DIFFERENCE TO VALIDATE!
-                    return res.status(500).send({message: err.message, data:null});
+                    return res.status(500).send({message: "You're not an admin!", data:null});
+                next();
+            });
+        }
+      });
+};
+export const checkLogged = (req, res, next)=>{
+    jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
+        if (err) {
+            return res.status(500).send({message: err.message, data:null});
+        }else{
+            database.getUser(decoded.userInfo.id,(result)=>{
+                req.userInfo = decoded.userInfo;
+                req.userInfo.isAdmin = result.isAdmin;
                 next();
             });
         }

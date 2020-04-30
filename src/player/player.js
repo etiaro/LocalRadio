@@ -41,7 +41,7 @@ export const player = Object.assign({}, {
     isShuffle: false,
     songInfo: {},
     startTime: new Date(),
-    playSong(fileName, name, length){
+    playSong(fileName, name, length, ytid){
         this.clearLastPlay();
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
 		if(fs.existsSync('./Music/'+fileName))
@@ -53,12 +53,13 @@ export const player = Object.assign({}, {
 				if (err) throw err;
 			});
 		else
-			throw "playing failed. File not found!";
+            throw "playing failed. File not found!";
         player.startTime = new Date();
         player.songInfo.name = name;
         player.songInfo.length = length;
         player.isPlaying = true;
         player.sendPlayerData();
+        database.addHistory({date: new Date(), ytid: ytid}, ()=>{});
         player.shuffleTimeout = setTimeout(()=>{
             player.isPlaying = false;
             player.songInfo = {};
@@ -70,7 +71,7 @@ export const player = Object.assign({}, {
         if(this.isShuffle){
             this.isShuffle = true;
             database.getRandomSong((song)=>{
-                player.playSong(song.file, song.name, song.length);
+                player.playSong(song.file, song.name, song.length, song.ytid);
             });
         }
     },
@@ -110,7 +111,7 @@ export const player = Object.assign({}, {
         database.getSong(ytid, (res)=>{
             if(res){
                 console.log("Video already downloaded to "+res.file);
-                notification.notify({msg: 'Skipping '+ ytid + ' - already downloaded'});
+                notification.notify({msg: 'Skipping '+ ytid + ' - already downloaded'}, true);
                 if(callback) callback();
                 return;
             }
@@ -134,11 +135,11 @@ export const player = Object.assign({}, {
             YD.on("error", function(error) {
                 if(callback) callback();
                 console.log(error);
-                notification.notify({msg: 'error while downloading '+ytid});
+                notification.notify({msg: 'error while downloading '+ytid}, true);
             });
             YD.on("progress", function(progress) {
                 console.log(JSON.stringify(progress));
-                //notification.notify({msg: 'Downloading '+ytid+', '+Math.round(progress.progress.percentage)+'%'});
+                //notification.notify({msg: 'Downloading '+ytid+', '+Math.round(progress.progress.percentage)+'%'}, true);
             });
             YD.on("finished", function(err, data) {
                 youtubeInfo(ytid, (err, i)=>{
@@ -148,7 +149,7 @@ export const player = Object.assign({}, {
                         return;
                     }
                     console.log("Finished downloading "+i.title+" to "+song.file);
-                    notification.notify({msg: 'Successfully downloaded '+i.title});
+                    notification.notify({msg: 'Successfully downloaded '+i.title}, true);
                     song.name = i.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                     song.author = i.owner.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                     song.length = i.duration;
@@ -170,6 +171,9 @@ export const player = Object.assign({}, {
     },
     findSong(songData, cb){
         database.findSong(songData, cb);
+    },
+    getHistory(date, site, cb){
+        database.getHistory(date, site, cb);
     },
     sendPlayerData(){
         notification.notify({player: this.getInfo()});
@@ -201,7 +205,7 @@ export const player = Object.assign({}, {
                 if(res.length == 0)
                     return;
                 if(res[0].date*1000 < new Date().getTime()){
-                    this.playSong(res[0].file, res[0].name, res[0].length);
+                    this.playSong(res[0].file, res[0].name, res[0].length, res[0].ytid);
                     database.modifyPlaylist({id: res[0].id, was: 1});
                 }
             });

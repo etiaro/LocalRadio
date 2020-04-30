@@ -5,3 +5,5 @@ node_modules
 dist
 src/config/database.js
 public/.vs/
+package-lock.json
+public/package-lock.json

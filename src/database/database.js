@@ -102,8 +102,35 @@ export const database = Object.assign({}, {
             }
           } 
       });
+      await this.con.query("SELECT * FROM information_schema.tables WHERE table_schema = '"+cfg.database+"' AND table_name = 'history' LIMIT 1;",
+        (err, result, fields) => {
+          if(err) console.log(err);
+          else{
+            if(result.length == 0){
+              console.log("History table not found, creating..."); 
+              this.con.query("CREATE TABLE `"+cfg.database+"`.`history` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
+              (err, result, fields)=>{
+                if(err) console.log(err)
+                else  console.log('Created table history'); 
+              });
+            }
+          } 
+      });
+      await this.con.query("SELECT * FROM information_schema.tables WHERE table_schema = '"+cfg.database+"' AND table_name = 'suggestions' LIMIT 1;",
+      (err, result, fields) => {
+        if(err) console.log(err);
+        else{
+          if(result.length == 0){
+            console.log("Suggestions table not found, creating..."); 
+            this.con.query("CREATE TABLE `"+cfg.database+"`.`suggestions` ( `id` INT NOT NULL AUTO_INCREMENT , `url` TEXT NOT NULL , `userId` VARCHAR(30) NOT NULL , `status` TINYINT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
+            (err, result, fields)=>{
+              if(err) console.log(err)
+              else  console.log('Created table suggestions'); 
+            });
+          }
+        } 
+      });
       this.fixPlaylistToFitSchedule();
-      console.log("Database validation done");
     },
     getUser(userId, cb){
       this.con.query("SELECT * FROM `users` WHERE id='"+userId+"'",
@@ -182,8 +209,84 @@ export const database = Object.assign({}, {
           }
       });
     },
+    addHistory(data, cb){
+      if(data.date instanceof Number) data.date = new Date(data.date * 1000);
+      if(typeof(data.date) === "string") data.date = new Date(data.date);
+      data.date = Math.floor(data.date.getTime()/1000);
+      this.con.query("INSERT INTO `history`(`ytid`, `date`) VALUES "+ 
+      "('"+data.ytid+"',FROM_UNIXTIME("+data.date+"));",
+        (err, result, fields) => {
+          if(err) console.log(err);
+          else{
+            if(cb) cb(result);
+          }
+        });
+    },
+    getHistory(date, site, cb){
+      var query = "SELECT * FROM history INNER JOIN songs ON songs.ytid = history.ytid WHERE ";
+      var query2 = "SELECT COUNT(*) FROM history WHERE ";
+    
+      if(date){
+        if(date instanceof Number) date = new Date(date * 1000);
+        if(typeof(date) === "string") date = new Date(date);
+        date = Math.floor(date.getTime()/1000);
+        query += "DATE(history.date) <= DATE(FROM_UNIXTIME("+date+"))";
+        query2 += "DATE(history.date) <= DATE(FROM_UNIXTIME("+date+"))";
+      }else{
+        query += "1";
+        query2 += "1";
+      }
+
+      if(!site) site = 1;
+      query += " ORDER by history.date ASC ";
+      query += "LIMIT "+30*site;
+      this.con.query(query+";"+query2+";",
+        (err, result, fields) => {
+          if(err) console.log(err);
+          else{
+            cb(result[0], result[1][0]["COUNT(*)"]);
+          }
+      });
+    },
+    updateSuggestion(sData, cb){ 
+      var query = "";
+      if(sData && sData.id && sData.status){
+        query = "UPDATE suggestions SET status="+sData.status+" WHERE id="+sData.id+";";
+      }else if(sData.url && sData.userId){
+        query = "INSERT INTO suggestions (url, userId, status) VALUES('"+sData.url+"', '"+sData.userId+"', 0);"
+      }
+      if(!sData || query===""){
+        if(cb) cb({err:"Wrong suggestion data"});
+      }else
+        this.con.query(query,
+          (err, result, fields) => {
+            if(err)
+              console.log(err);
+            else{
+              if(cb) cb({res:result});
+            }
+        });
+    },
+    getSuggestions(sData, cb){
+      var query = "SELECT *, suggestions.id as id FROM suggestions INNER JOIN users ON users.id=suggestions.userId";
+      var query2 = "SELECT COUNT(*) FROM suggestions INNER JOIN users ON users.id=suggestions.userId";
+      if(sData && sData.userId){
+        query += " WHERE suggestions.userId="+sData.userId;
+        query2 += " WHERE suggestions.userId="+sData.userId;
+      }
+      query+= " ORDER BY suggestions.id DESC";
+      var site = sData.site || 1;
+      query += " LIMIT "+site*30;
+      this.con.query(query+";"+query2,
+        (err, result, fields) => {
+          if(err) 
+            console.log(err);
+          else{
+            if(cb) cb(result[0], result[1][0]["COUNT(*)"]);
+          }
+      });
+    },
     getAllPlaylistData(date, cb){
-      //TODO fix timezones
       var query = "SELECT * FROM `timeSchedule` ORDER BY `id` DESC LIMIT 1;"+
       "SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid WHERE ";
       
@@ -193,7 +296,6 @@ export const database = Object.assign({}, {
         date.setHours(0,0,0,0);
         var dateTo = new Date(date);
         dateTo.setHours(23,59,59,999);
-        console.log(date, dateTo);
         date = Math.floor(date.getTime()/1000);
         dateTo = Math.floor(dateTo.getTime()/1000);
         query += "playlist.date>FROM_UNIXTIME("+date+") AND playlist.date<FROM_UNIXTIME("+dateTo+")";
@@ -272,7 +374,7 @@ export const database = Object.assign({}, {
       //date FROM_UNIXTIME('Date.toMiliseconds or smthg')
       //modify or update entry
     },
-    setAmplifierTimeSchedule(schedule, cb){ //TODO use somewhere! 
+    setAmplifierTimeSchedule(schedule, cb){
       if(typeof schedule === "string")
         schedule = JSON.parse(schedule);
       if(!schedule.day)
@@ -303,7 +405,6 @@ export const database = Object.assign({}, {
       });
     },
     fixPlaylistToFitSchedule(){
-      //TODO REWORK THIS SHIT!
       this.getAllPlaylistData(new Date(), (playlistD)=>{
         var songs = playlistD[1];
         var schedule = playlistD[0].day[new Date().getDay()] ? playlistD[0].enabledTimes : [];
@@ -325,7 +426,7 @@ export const database = Object.assign({}, {
               if(err) console.log(err);
             });
             return; 
-          }// TODO remove all next songs
+          }
           var tmpDate = new Date(beginning.getFullYear(),beginning.getMonth(), beginning.getDate(), schedule[actSchInd].begin.hour, schedule[actSchInd].begin.minutes)
           beginning = new Date(Math.max(tmpDate, beginning));
           var timestamp = Math.floor(beginning.getTime()/1000);

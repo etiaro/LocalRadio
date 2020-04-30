@@ -2,6 +2,13 @@ body{
     background-color: #FFFFFF;
     background-image: none;
 }
+#root{
+    overflow: auto;
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+}
+
+
 .window{
     text-align: center;
     padding-top: 3.5em;
@@ -25,8 +32,27 @@ body{
     height: 95vh;
 }
 .Playlist{
-    overflow: scroll;
-    height: 95vh;
+    overflow: overlay;
     text-align: center;
     position: relative;
+}
+.History{
+    overflow: overlay;
+    text-align: center;
+    position: relative;
+}
+
+
+@media screen and (max-width:640px) {
+    .window{
+        height: 100%;
+        width: 100%;
+        padding:0;
+        margin:0;
+    }
+    .window-content{
+        margin: 0;
+        margin-top: 3.5em;
+        max-height: calc(100% - 5.5em - 56px);
+    }
 }

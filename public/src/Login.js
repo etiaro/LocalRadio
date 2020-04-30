@@ -7,6 +7,11 @@ import Paper from '@material-ui/core/Paper';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import FacebookLogin from 'react-facebook-login';
   
+
+let vh = window.innerHeight * 0.01;
+// Then we set the value in the --vh custom property to the root of the document
+document.documentElement.style.setProperty('--vh', `${vh}px`);
+
 export default class Login extends React.Component{
     constructor(props){
         super(props);
