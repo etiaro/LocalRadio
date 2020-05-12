@@ -457,7 +457,7 @@ export const database = Object.assign({}, {
           var timestamp = Math.floor(beginning.getTime()/1000);
           beginning = new Date((timestamp+songs[songInd].length)*1000);
           if(timestamp > songs[songInd].date) {
-            this.con.query("UPDATE playlist SET date=FROM_UNIXTIME("+timestamp+") WHERE id="+songs[songInd].id+";",
+            this.con.query("UPDATE playlist SET was=0, date=FROM_UNIXTIME("+timestamp+") WHERE id="+songs[songInd].id+";",
               (err, result, fields) => {
                 if(err) console.log(err);
               });
