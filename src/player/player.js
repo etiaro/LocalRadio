@@ -44,16 +44,18 @@ export const player = Object.assign({}, {
     playSong(fileName, name, length, ytid){
         this.clearLastPlay();
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
-		if(fs.existsSync('./Music/'+fileName))
-			this.audio = this.p.play('./Music/'+fileName, function(err){
-				if (err) throw err;
-			});
-		else if(fs.existsSync('../Music/'+fileName))
-			this.audio = this.p.play('../Music/'+fileName, function(err){
-				if (err) throw err;
-			});
-		else
-            throw "playing failed. File not found!";
+        if(!process.env.REACT_APP_DEMO){
+            if(fs.existsSync('./Music/'+fileName))
+                this.audio = this.p.play('./Music/'+fileName, function(err){
+                    if (err) throw err;
+                });
+            else if(fs.existsSync('../Music/'+fileName))
+                this.audio = this.p.play('../Music/'+fileName, function(err){
+                    if (err) throw err;
+                });
+            else
+                throw "playing failed. File not found!";
+        }
         player.startTime = new Date();
         player.songInfo.name = name;
         player.songInfo.length = length;
@@ -108,10 +110,15 @@ export const player = Object.assign({}, {
             this.sendPlayerData();
     },
     downloadSong(ytid, callback){
+        if(process.env.REACT_APP_DEMO){
+            notification.notify({msg: 'Pobieranie jest wyłączone w trybie demostracyjnym'}, true);
+            if(callback) callback();
+            return;
+        }
         database.getSong(ytid, (res)=>{
             if(res){
                 console.log("Video already downloaded to "+res.file);
-                notification.notify({msg: 'Skipping '+ ytid + ' - already downloaded'}, true);
+                notification.notify({msg: 'Pomijam '+ ytid + ' - jest już pobrane'}, true);
                 if(callback) callback();
                 return;
             }
@@ -135,7 +142,7 @@ export const player = Object.assign({}, {
             YD.on("error", function(error) {
                 if(callback) callback();
                 console.log(error);
-                notification.notify({msg: 'error while downloading '+ytid}, true);
+                notification.notify({msg: 'Wystąpił problem podczas pobierania '+ytid}, true);
             });
             YD.on("progress", function(progress) {
                 console.log(JSON.stringify(progress));
@@ -149,7 +156,7 @@ export const player = Object.assign({}, {
                         return;
                     }
                     console.log("Finished downloading "+i.title+" to "+song.file);
-                    notification.notify({msg: 'Successfully downloaded '+i.title}, true);
+                    notification.notify({msg: 'Pomyślnie pobrano '+i.title}, true);
                     song.name = i.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                     song.author = i.owner.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                     song.length = i.duration;
@@ -160,6 +167,10 @@ export const player = Object.assign({}, {
         });
     },
     downloadSongs(ytids){
+        if(process.env.REACT_APP_DEMO){
+            notification.notify({msg: 'Pobieranie jest wyłączone w trybie demostracyjnym'}, true);
+            return;
+        }
         var i = 0;
         var f = this.downloadSong;
         f(ytids[i], next);

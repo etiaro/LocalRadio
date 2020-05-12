@@ -4,6 +4,13 @@ import jwt from 'jsonwebtoken';
 import {database} from '../database/database';
 
 function validate(req, res, next){
+    if(process.env.REACT_APP_DEMO){
+        req.userInfo = {};
+        req.userInfo.isAdmin = true;
+        req.userInfo.id = "1";
+        next();
+        return;
+    }
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
             return res.status(500).send({message: err.message, data:null});
@@ -19,6 +26,13 @@ function validate(req, res, next){
 
 
 export const checkAdmin = (req, res, next)=>{
+    if(process.env.REACT_APP_DEMO){
+        req.userInfo = {};
+        req.userInfo.isAdmin = true;
+        req.userInfo.id = "1";
+        next();
+        return;
+    }
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
             return res.status(500).send({message: err.message, data:null});
@@ -34,6 +48,13 @@ export const checkAdmin = (req, res, next)=>{
       });
 };
 export const checkLogged = (req, res, next)=>{
+    if(process.env.REACT_APP_DEMO){
+        req.userInfo = {};
+        req.userInfo.isAdmin = true;
+        req.userInfo.id = "1";
+        next();
+        return;
+    }
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
             return res.status(500).send({message: err.message, data:null});

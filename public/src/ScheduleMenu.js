@@ -134,11 +134,11 @@ export default class ScheduleMenu extends React.Component {
         if(this.state.loading)
             communicate = (<CircularProgress/>);
         else if(this.state.enabledTimes.length === 0)
-            communicate = ("There are no enabled times :)");
+            communicate = (<p>Brak uruchomień</p>);
         
         return (<Paper className="window" elevation={2} square={true}>
             <TabBar>
-                <p>Schedule</p>
+                <p>Plan Działania</p>
                 <CloseBtn color="inherit" onClick={() => this.props.close()}>
                     <CloseIcon />
                 </CloseBtn>
@@ -181,11 +181,11 @@ export default class ScheduleMenu extends React.Component {
                 {this.state.enabledTimes.map((time, ind) => (
                     <div key={ind}>
                         <Grid container direction="row" justify="center" alignItems="center">
-                            <HourInput inputRef={this.inputRefs[ind].begin} size="small" label="Begin" variant="outlined" onChange={(e)=>{this.changeTime(e, ind, true);}} value={this.formatTime(time.begin)}/>
+                            <HourInput inputRef={this.inputRefs[ind].begin} size="small" label="Początek" variant="outlined" onChange={(e)=>{this.changeTime(e, ind, true);}} value={this.formatTime(time.begin)}/>
                             <Typography component="span">
                                 {"->"}
                             </Typography>
-                            <HourInput inputRef={this.inputRefs[ind].end} size="small" label="End" variant="outlined" onChange={(e)=>{this.changeTime(e, ind, false);}} value={this.formatTime(time.end)}/>
+                            <HourInput inputRef={this.inputRefs[ind].end} size="small" label="Koniec" variant="outlined" onChange={(e)=>{this.changeTime(e, ind, false);}} value={this.formatTime(time.end)}/>
                             <IconButton onClick={()=>{this.deleteTime(ind)}}>
                                 <Delete/>
                             </IconButton>
@@ -196,7 +196,7 @@ export default class ScheduleMenu extends React.Component {
                     </div>
                 ))}
                 <Button variant="contained" color="primary" onClick={() => { this.changeCall(); }}>
-                    Change
+                    Zmień
                 </Button>
             </div>
         </Paper>);

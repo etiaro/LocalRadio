@@ -31,6 +31,10 @@ app.use('/api/notification', notification());
 
 //hosting built react app(front end)
 app.use(express.static(path.join(__dirname, '../public/build/')));
+app.use('/playlist', express.static(path.join(__dirname, '../public/build/')));
+app.use('/library', express.static(path.join(__dirname, '../public/build/')));
+app.use('/history', express.static(path.join(__dirname, '../public/build/')));
+app.use('/suggestions', express.static(path.join(__dirname, '../public/build/')));
 
 // errors handling
 app.use(notFound);

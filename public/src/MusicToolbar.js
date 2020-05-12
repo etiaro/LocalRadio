@@ -132,7 +132,7 @@ export default function MusicToolbar(props) {
         return () => {
             clearInterval(timer);
         };
-    }, [props.playerData]);
+    }, [props.playerData, classes.scrollable]);
 
     var toolbarText = "Radio wyłączone";
     if(props.playerData.song.name)

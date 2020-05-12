@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Panel from './Panel';
 import UserHome from './UserHome';
-import Login from './Login';
+import Login, {DemoAlert, DemoLogin} from './Login';
 import Cookies from 'universal-cookie';
 
 
@@ -32,7 +32,7 @@ function getUserData(cb, errCb){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"login/data/", cb!=null); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));
     if(cb!=null)
         xmlHttp.onload = ()=>{
             cb(xmlHttp.responseText);
@@ -201,7 +201,19 @@ function getSuggestions(settings, cb){
     if(cb==null)
         return JSON.parse(xmlHttp.responseText).result;
 }
-function changePage(){
+var Communicate = 0;
+function changePage(to){
+    if(process.env.REACT_APP_DEMO){
+        if(Communicate === 0){
+            Communicate = 1;
+            ReactDOM.render(<DemoAlert />, document.getElementById('root'));
+        }else{
+            if(to === 1) ReactDOM.render(<Panel userData={{id: "1", isAdmin: true}}/>, document.getElementById('root'));
+            else if(to === 2) ReactDOM.render(<UserHome userData={{id: "1", isAdmin: false}}/>, document.getElementById('root'));
+            else ReactDOM.render(<DemoLogin />, document.getElementById('root'));
+        }
+        return;
+    }
     getUserData((userData)=>{
         try{
             userData = JSON.parse(userData);

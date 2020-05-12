@@ -80,10 +80,15 @@ export const database = Object.assign({}, {
           else{
             if(result.length == 0){
               console.log("TimeSchedule table not found, creating..."); 
-              this.con.query("CREATE TABLE `"+cfg.database+"`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
+              this.con.query("CREATE TABLE `"+cfg.database+"`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB; ",
               (err, result, fields)=>{
                 if(err) console.log(err)
                 else  console.log('Created table timeSchedule');
+              });
+              this.con.query("INSERT INTO `timeSchedule` (`data`, `date`) VALUES ('{\"enabledTimes\":[],\"day\":[false,false,false,false,false,false,false]}', '2020-05-12 11:22:02');",
+              (err, result, fields)=>{
+                if(err) console.log(err)
+                else  console.log('Inserted default time schedule');
               });
             }
           } 
@@ -94,7 +99,7 @@ export const database = Object.assign({}, {
           else{
             if(result.length == 0){
               console.log("Playlist table not found, creating..."); 
-              this.con.query("CREATE TABLE `"+cfg.database+"`.`playlist` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL , `was` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
+              this.con.query("CREATE TABLE `"+cfg.database+"`.`playlist` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, `was` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
               (err, result, fields)=>{
                 if(err) console.log(err)
                 else  console.log('Created table playlist'); 
@@ -238,7 +243,7 @@ export const database = Object.assign({}, {
       }
 
       if(!site) site = 1;
-      query += " ORDER by history.date ASC ";
+      query += " ORDER by history.date DESC ";
       query += "LIMIT "+30*site;
       this.con.query(query+";"+query2+";",
         (err, result, fields) => {
@@ -268,12 +273,32 @@ export const database = Object.assign({}, {
         });
     },
     getSuggestions(sData, cb){
-      var query = "SELECT *, suggestions.id as id FROM suggestions INNER JOIN users ON users.id=suggestions.userId";
-      var query2 = "SELECT COUNT(*) FROM suggestions INNER JOIN users ON users.id=suggestions.userId";
-      if(sData && sData.userId){
-        query += " WHERE suggestions.userId="+sData.userId;
-        query2 += " WHERE suggestions.userId="+sData.userId;
+      if(!sData || !(sData.waiting || sData.accepted || sData.denied)){
+        cb([], 0);
+        return;
       }
+      var query = "SELECT *, suggestions.id as id FROM suggestions INNER JOIN users ON users.id=suggestions.userId WHERE ";
+      var query2 = "SELECT COUNT(*) FROM suggestions INNER JOIN users ON users.id=suggestions.userId WHERE ";
+      if(sData && sData.userId){
+          query += "suggestions.userId="+sData.userId+" AND ";
+          query2 += "suggestions.userId="+sData.userId+" AND ";
+      }
+      query += "status IN (";
+      query2 += "status IN (";
+      if(sData){
+        var statuses = [];
+        if(sData.waiting) statuses.push(0);
+        if(sData.accepted) statuses.push(1);
+        if(sData.denied) statuses.push(-1);
+        var tmp ="";
+        for(var i = 0; i < statuses.length; i++)
+          tmp+=statuses[i]+",";
+        if(statuses.length > 0)
+          tmp = tmp.slice(0, -1);
+        query += tmp+")";
+        query2 += tmp+")";
+      }
+
       query+= " ORDER BY suggestions.id DESC";
       var site = sData.site || 1;
       query += " LIMIT "+site*30;
