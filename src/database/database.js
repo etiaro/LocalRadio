@@ -79,12 +79,12 @@ export const database = Object.assign({}, {
           else{
             if(result.length == 0){
               console.log("TimeSchedule table not found, creating..."); 
-              this.con.query("CREATE TABLE `"+cfg.database+"`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB; ",
+              this.con.query("CREATE TABLE `"+cfg.database+"`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, `amplifierMode` INT NOT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB; ",
               (err, result, fields)=>{
                 if(err) console.log(err)
                 else  console.log('Created table timeSchedule');
               });
-              this.con.query("INSERT INTO `timeSchedule` (`data`, `date`) VALUES ('{\"enabledTimes\":[],\"day\":[false,false,false,false,false,false,false]}', '2020-05-12 11:22:02');",
+              this.con.query("INSERT INTO `timeSchedule` (`data`, `date`, `amplifierMode`) VALUES ('{\"enabledTimes\":[],\"day\":[false,false,false,false,false,false,false]}', '2020-01-01 01:00:00', 0);",
               (err, result, fields)=>{
                 if(err) console.log(err)
                 else  console.log('Inserted default time schedule');
@@ -339,7 +339,7 @@ export const database = Object.assign({}, {
         date = Math.floor(date.getTime()/1000);
         query += "playlist.date>DATE(FROM_UNIXTIME("+date+"))";
       }
-
+ 
       query+= " ORDER by playlist.date ASC;";
       this.con.query( query,
         (err, result, fields) => {
@@ -417,7 +417,7 @@ export const database = Object.assign({}, {
         schedule.enabledTimes = [];
       schedule = JSON.stringify(schedule);
       
-      this.con.query("INSERT INTO `timeSchedule`(`data`) VALUES ('"+schedule+"')",
+      this.con.query("UPDATE `timeSchedule` SET `data`='"+schedule+"';",
         (err, result, fields) => {
           if(err) 
             console.log(err);
@@ -425,9 +425,8 @@ export const database = Object.assign({}, {
             if(cb) cb(result);
       });
       this.fixPlaylistToFitSchedule();
-      //adds a record
     },
-    getAmplifierTimeSchedule(cb){ 
+    getScheduleAndAmplifierMode(cb){ 
       this.con.query("SELECT * FROM `timeSchedule` ORDER BY `id` DESC LIMIT 1",
         (err, result, fields) => {
           if(err) 
@@ -437,6 +436,18 @@ export const database = Object.assign({}, {
               if(result[0]) cb(JSON.parse(result[0].data));
               else cb(null);
       });
+    },
+    setAmplifierMode(mode, cb){
+      mode = parseInt(mode);
+      
+      this.con.query("UPDATE `timeSchedule` SET `amplifierMode`='"+mode+"';",
+        (err, result, fields) => {
+          if(err) 
+            console.log(err);
+          else
+            if(cb) cb(result);
+      });
+      this.fixPlaylistToFitSchedule();
     },
     fixPlaylistToFitSchedule(){
       this.getAllPlaylistData(new Date(), (playlistD)=>{

@@ -40,7 +40,7 @@ export const notification = Object.assign({}, {
             }else
                 try{
                     notification.listeners[sendID].sent = 1;
-                    notification.listeners[sendID].send(data);
+                    notification.listeners[sendID].send(data); 
                 }catch(e){
                 }
         }, 200);

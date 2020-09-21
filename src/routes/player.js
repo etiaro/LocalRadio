@@ -5,6 +5,7 @@ import {player} from '../player/player';
 import {checkLogged, checkAdmin} from './login';
 import getYouTubeID from 'get-youtube-id';
 import ytList from "youtube-playlist";
+import { amplifier } from '../player/amplifier';
 
 export default () => {
     const api = Router();
@@ -62,6 +63,13 @@ export default () => {
         }else
             return res.status(500).send({msg:"no schedule entered"})
     });
+    api.post('/amplifier', checkAdmin, (req, res, next) =>{
+        if(req.body.mode){
+            amplifier.setMode(req.body.mode);
+            return res.status(200).send({msg: "query accepted"});
+        }else
+            return res.status(500).send({msg:"no schedule entered"})
+    })
     api.post('/play', checkAdmin, (req, res, next) => { 
         if(req.body.shufflePlay){
             player.playShuffle();

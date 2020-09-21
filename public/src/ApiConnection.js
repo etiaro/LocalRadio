@@ -303,6 +303,14 @@ function sendScheduleData(date){
     xmlHttp.send(JSON.stringify({schedule: date}));
     return false;
 }
+function sendAmpMode(mode){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("POST", adress+"player/amplifier/");
+    xmlHttp.setRequestHeader("Content-Type", "application/json");
+    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.send(JSON.stringify({mode: mode}));
+    return false;
+}
 function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist){
     setTimeout(()=>{
         var xmlHttp = new XMLHttpRequest();
@@ -343,4 +351,4 @@ function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist){
     }, 0);
 }
 
-export {getUserData, changePage, login as apiLogin, logout, findSong, getHistory, getSuggestions, suggest, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData};
+export {getUserData, changePage, login as apiLogin, logout, findSong, getHistory, getSuggestions, suggest, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData, sendAmpMode};

@@ -105,7 +105,8 @@ export const player = Object.assign({}, {
         if(this.isShuffle){
             this.isShuffle = true;
             database.getRandomSong((song)=>{
-                player.playSong(song.file, song.name, song.length, song.ytid);
+                if(song)
+                    player.playSong(song.file, song.name, song.length, song.ytid);
             });
         }
     },

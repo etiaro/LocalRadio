@@ -55,21 +55,22 @@ export const amplifier = Object.assign({}, {
                     }
                 });
             else{
-                if(amplifier.mode == amplifier.modes.on){
-                    port.write('+');
-                    if(player.isShuffle) player.playShuffle();
-                    lastMode = '+';
-                }else if(amplifier.mode == amplifier.modes.off){
-                    port.write('-');
-                    if(lastMode != '-')
-                        player.stopPlaying();
-                    lastMode = '-';
-                }else if(amplifier.mode == amplifier.modes.auto){
-                    const now = new Date();
-                    database.getAmplifierTimeSchedule((res)=>{
+                database.getScheduleAndAmplifierMode((res)=>{
+                    amplifier.mode = parseInt(res.amplifierMode);
+                    if(amplifier.mode === amplifier.modes.on){
+                        port.write('+');
+                        if(player.isShuffle) player.playShuffle();
+                        lastMode = '+';
+                    }else if(amplifier.mode === amplifier.modes.off){
+                        port.write('-');
+                        if(lastMode != '-')
+                            player.stopPlaying();
+                        lastMode = '-';
+                    }else if(amplifier.mode === amplifier.modes.auto){
+                        const now = new Date();
                         if(!res.day[now.getDay()]){
                             port.write('-');
-                            if(lastMode != '-')
+                            if(lastMode !== '-')
                                 player.stopPlaying();
                             lastMode = '-';
                             return;
@@ -86,17 +87,19 @@ export const amplifier = Object.assign({}, {
                             lastMode = '+';
                         }else{
                             port.write('-');
-                            if(lastMode != '-')
+                            if(lastMode !== '-')
                                 player.stopPlaying();
                             lastMode = '-';
                         }
-                    });
-                }
+                    }
+                });
             }
         },1000);
     },
     setMode(mode){
-        if(mode == this.modes.on || mode == this.modes.off || mode == this.modes.auto)
+        if(mode == this.modes.on || mode == this.modes.off || mode == this.modes.auto){
             this.mode = mode;
+            database.setAmplifierMode(mode)
+        }
     }
 });
