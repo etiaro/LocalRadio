@@ -50,7 +50,6 @@ export const player = Object.assign({}, {
     startTime: new Date(),
     init(){
         player.YD.on("error", function(error, data) {
-            if(callback) callback();
             console.log(error, data);
             notification.notify({msg: 'Wystąpił problem podczas pobierania'}, true);
         });
@@ -70,7 +69,6 @@ export const player = Object.assign({}, {
                 database.updateSong(song);
             }).catch((err)=>{
                 console.log(err);
-                if(callback) callback();
             });
         });
         player.startPlaylistWatchman();
