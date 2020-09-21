@@ -11,6 +11,7 @@ import Button from '@material-ui/core/Button';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItem from '@material-ui/core/ListItem';
 import List from '@material-ui/core/List';
+import TextField from '@material-ui/core/TextField';
   
 
 let vh = window.innerHeight * 0.01;
@@ -41,6 +42,18 @@ export default class Login extends React.Component{
             });
         }
     }
+    passwordLogin(e){
+        if(e.keyCode === 13){
+            
+            this.setState({waiting: true});
+            apiLogin({password: e.target.value}, (resp)=>{
+                if(resp === true) return;
+                else if(resp === -1) this.setState({noConnection: true});
+    
+                this.setState({waiting: false});
+            });
+        }
+    }
     render(){
         var content = (<div>
                     <h3>Witamy na stronie radiowęzła!</h3>
@@ -52,6 +65,18 @@ export default class Login extends React.Component{
                         onClick={()=>this.loginClicked()}
                         callback={(r)=>this.responseFacebook(r)} />
                 </div>);
+        if(window.location.pathname === "/password"){
+            content = (<div>
+                <h3>Podaj hasło</h3>
+                <TextField
+                    id="standard-password-input"
+                    label="Password"
+                    type="password"
+                    autoComplete="current-password"
+                    onKeyDown={(e)=>this.passwordLogin(e)}
+                    />
+            </div>);
+        }
         if(this.state.waiting)
             content = (<CircularProgress/>);
         else if(this.state.noConnection)

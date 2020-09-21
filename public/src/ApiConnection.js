@@ -24,7 +24,7 @@ function makeid(length) {
 
 const cookies = new Cookies();
 
-const adress = "https://"+window.location.hostname+"/api/";
+const adress = "http://"+window.location.hostname+"/api/";
 var notificationID = makeid(8);
 var actNotID = {msg:0, player:0, playlist:0};
 
@@ -57,7 +57,7 @@ function login(response, cb){
                 cb(false); return;
             }
             cookies.set('accessToken',  JSON.parse(xmlHttp.responseText).token, { Expires: new Date(new Date().getTime()+3600000).toUTCString() });
-            changePage();
+            changePage(window.location.pathname==="/password" ? 1 : null);
             cb(true);
         }
         xmlHttp.onerror = ()=>{
@@ -67,8 +67,12 @@ function login(response, cb){
             cb(-1);
         }
     }
+    console.log(response)
     try{
-        xmlHttp.send("accessToken="+response.accessToken);
+        if(response.accessToken)
+            xmlHttp.send("accessToken="+response.accessToken);
+        else
+            xmlHttp.send("password="+response.password);
     }catch(err){
         return -1;
     }
@@ -80,6 +84,10 @@ function login(response, cb){
         }
         return false;
     }
+}
+function logout(){
+    cookies.remove('accessToken');
+    document.location.reload();
 }
 
 function downloadSong(ytUrl){
@@ -124,7 +132,7 @@ function switchShuffle(play){
         xmlHttp.send('{"shuffleSwitch": true}');
     return false;
 }
-function stopSong(fileName){
+function stopSong(){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/stop");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
@@ -177,6 +185,7 @@ function suggest(data, cb){
     if(cb!=null){
         xmlHttp.onload = ()=>{
             var resp = JSON.parse(xmlHttp.responseText);
+            console.log(resp)
             cb(resp.result);
         };
         xmlHttp.onerror = HANDLEERROR;
@@ -214,10 +223,28 @@ function changePage(to){
         }
         return;
     }
+    if(window.location.pathname === "/password" && !to){
+        console.log(to)
+        ReactDOM.render(<Login />, document.getElementById('root'));
+        return;
+    }
+
     getUserData((userData)=>{
+        console.log(userData)
         try{
             userData = JSON.parse(userData);
             ReactDOM.unmountComponentAtNode(document.getElementById('root'));
+            if(userData.demo){
+                if(Communicate === 0){
+                    Communicate = 1;
+                    ReactDOM.render(<DemoAlert />, document.getElementById('root'));
+                }else{
+                    if(to === 1) ReactDOM.render(<Panel userData={{id: "1", isAdmin: true}}/>, document.getElementById('root'));
+                    else if(to === 2) ReactDOM.render(<UserHome userData={{id: "1", isAdmin: false}}/>, document.getElementById('root'));
+                    else ReactDOM.render(<DemoLogin />, document.getElementById('root'));
+                }
+                return;
+            }
             if(!userData.loggedIn){
                 ReactDOM.render(<Login />, document.getElementById('root'));
             }else if(userData.isAdmin){
@@ -230,6 +257,7 @@ function changePage(to){
             return;
         }
     }, (err)=>{
+        console.log(err)
         ReactDOM.render(<Login />, document.getElementById('root'));
         return;
     })
@@ -319,4 +347,4 @@ function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist){
     }, 0);
 }
 
-export {getUserData, changePage, login as apiLogin, findSong, getHistory, getSuggestions, suggest, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData};
+export {getUserData, changePage, login as apiLogin, logout, findSong, getHistory, getSuggestions, suggest, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData};

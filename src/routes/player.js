@@ -90,8 +90,9 @@ export default () => {
                     player.downloadSongs(playlist);
                   });
                 return;
-            }else
+            }else{
                 req.body.ytid = getYouTubeID(req.body.url);
+            }
         }
         if(req.body.ytid){
             player.downloadSong(req.body.ytid);

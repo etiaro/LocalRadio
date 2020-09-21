@@ -146,6 +146,16 @@ export const database = Object.assign({}, {
         }
       });
     },
+    getIPUser(ip, cb){
+      this.con.query("INSERT IGNORE INTO `users` SET id='"+ip+"', name='Anon', mail='none', picture='https://getdrawings.com/free-icon-bw/facebook-avatar-icon-3.png', isAdmin=FALSE"+
+        ";SELECT * FROM `users` WHERE id='"+ip+"'",
+      (err, result, fields) => {
+        if(err) console.log(err);
+        else{
+          cb(result[1][0]);
+        }
+      });
+    },
     updateUser(userData, cb){
       this.con.query("INSERT INTO `users`(`id`, `name`, `mail`, `picture`) VALUES "+ 
             "('"+userData.id+"','"+userData.name+"','"+userData.email+"','"+userData.picture.data.url+"') ON DUPLICATE KEY UPDATE "+

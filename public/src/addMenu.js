@@ -40,7 +40,7 @@ export default class AddMenu extends React.Component {
     handleURLChange(e) {
         var val = e.target.value;
         var btnDisabled = true;
-        if((val.includes("v=") && val.includes("https://")) || val.includes("https://youtu.be/"))
+        if(((val.includes("v=")|| val.includes("list=")) && val.includes("https://")) || val.includes("https://youtu.be/"))
           btnDisabled = false;
         this.setState({url: val, btnDisabled: btnDisabled});
     }

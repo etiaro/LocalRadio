@@ -1,10 +1,11 @@
 import YTmp3 from "youtube-mp3-downloader";
 import {database} from "../database/database";
-import youtubeInfo from "youtube-info";
+import ytdl from "ytdl-core";
 import p from 'play-sound';
 import fs from 'fs';
 import {notification} from './notification';
 import {amplifier} from './amplifier';
+import cfg from '../config/general';
 
 
 const pl = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
@@ -44,7 +45,7 @@ export const player = Object.assign({}, {
     playSong(fileName, name, length, ytid){
         this.clearLastPlay();
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
-        if(!process.env.REACT_APP_DEMO){
+        if(!cfg.demo){
             if(fs.existsSync('./Music/'+fileName))
                 this.audio = this.p.play('./Music/'+fileName, function(err){
                     if (err) throw err;
@@ -110,7 +111,7 @@ export const player = Object.assign({}, {
             this.sendPlayerData();
     },
     downloadSong(ytid, callback){
-        if(process.env.REACT_APP_DEMO){
+        if(cfg.demo){
             notification.notify({msg: 'Pobieranie jest wyłączone w trybie demostracyjnym'}, true);
             if(callback) callback();
             return;
@@ -139,9 +140,9 @@ export const player = Object.assign({}, {
                 song.file = makeid(10)+".mp3";
 
             YD.download(ytid, song.file);
-            YD.on("error", function(error) {
+            YD.on("error", function(error, data) {
                 if(callback) callback();
-                console.log(error);
+                console.log(error, data);
                 notification.notify({msg: 'Wystąpił problem podczas pobierania '+ytid}, true);
             });
             YD.on("progress", function(progress) {
@@ -149,25 +150,23 @@ export const player = Object.assign({}, {
                 //notification.notify({msg: 'Downloading '+ytid+', '+Math.round(progress.progress.percentage)+'%'}, true);
             });
             YD.on("finished", function(err, data) {
-                youtubeInfo(ytid, (err, i)=>{
-                    if(err){
-                        console.log(err);
-                        if(callback) callback();
-                        return;
-                    }
-                    console.log("Finished downloading "+i.title+" to "+song.file);
-                    notification.notify({msg: 'Pomyślnie pobrano '+i.title}, true);
-                    song.name = i.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
-                    song.author = i.owner.replace(/[^\w\s]/gi, '').replace(/'/g, '');
-                    song.length = i.duration;
+                ytdl.getBasicInfo(ytid).then((data)=>{
+                    console.log("Finished downloading "+data.videoDetails.title+" to "+song.file);
+                    notification.notify({msg: 'Pomyślnie pobrano '+data.videoDetails.title}, true);
+                    song.name = data.videoDetails.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
+                    song.author = data.videoDetails.author.name.replace(/[^\w\s]/gi, '').replace(/'/g, '');
+                    song.length = data.videoDetails.lengthSeconds;
                     database.updateSong(song);
+                    if(callback) callback();
+                }).catch((err)=>{
+                    console.log(err);
                     if(callback) callback();
                 });
             });
         });
     },
     downloadSongs(ytids){
-        if(process.env.REACT_APP_DEMO){
+        if(cfg.demo){
             notification.notify({msg: 'Pobieranie jest wyłączone w trybie demostracyjnym'}, true);
             return;
         }

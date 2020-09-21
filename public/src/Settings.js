@@ -7,8 +7,8 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import { LibraryBooks, PlaylistAddCheck, History, GitHub, AddComment} from '@material-ui/icons';
-
+import { ExitToApp, LibraryBooks, PlaylistAddCheck, History, GitHub, AddComment} from '@material-ui/icons';
+import {logout} from './ApiConnection'
 
 
 const useStyles = makeStyles(theme => ({
@@ -55,6 +55,10 @@ export default function Settings(props) {
                             <ListItemText primary="Sugestie" />
                         </ListItem>
                     </Link>
+                    <ListItem button onClick={()=>logout()}>
+                        <ListItemIcon><ExitToApp/></ListItemIcon>
+                        <ListItemText primary="Wyloguj" />
+                    </ListItem>
                 </List>
         </Drawer> 
     );
