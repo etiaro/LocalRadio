@@ -57,7 +57,7 @@ function login(response, cb){
                 cb(false); return;
             }
             cookies.set('accessToken',  JSON.parse(xmlHttp.responseText).token, { Expires: new Date(new Date().getTime()+3600000).toUTCString() });
-            changePage(window.location.pathname==="/password" ? 1 : null);
+            changePage(window.location.pathname.contains("password") ? 1 : null);
             cb(true);
         }
         xmlHttp.onerror = ()=>{
@@ -222,7 +222,7 @@ function changePage(to){
         }
         return;
     }
-    if(window.location.pathname === "/password" && !to){
+    if(window.location.pathname.contains('password') && !to){
         ReactDOM.render(<Login />, document.getElementById('root'));
         return;
     }
