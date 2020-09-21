@@ -85,7 +85,7 @@ export default () => {
         if(req.body.url){
             if(req.body.url.includes("playlist")){
                 res.status(200).send({msg: "query accepted"});
-                ytList(req.body.url, 'id').then(result => { //TODO show all playlist titless, not first 50(?)
+                ytList(req.body.url, 'id').then(result => {
                     var playlist = result.data.playlist;
                     player.downloadSongs(playlist);
                   });

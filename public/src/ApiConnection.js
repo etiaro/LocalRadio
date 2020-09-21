@@ -67,7 +67,7 @@ function login(response, cb){
             cb(-1);
         }
     }
-    console.log(response)
+
     try{
         if(response.accessToken)
             xmlHttp.send("accessToken="+response.accessToken);
@@ -185,7 +185,6 @@ function suggest(data, cb){
     if(cb!=null){
         xmlHttp.onload = ()=>{
             var resp = JSON.parse(xmlHttp.responseText);
-            console.log(resp)
             cb(resp.result);
         };
         xmlHttp.onerror = HANDLEERROR;
@@ -224,13 +223,11 @@ function changePage(to){
         return;
     }
     if(window.location.pathname === "/password" && !to){
-        console.log(to)
         ReactDOM.render(<Login />, document.getElementById('root'));
         return;
     }
 
     getUserData((userData)=>{
-        console.log(userData)
         try{
             userData = JSON.parse(userData);
             ReactDOM.unmountComponentAtNode(document.getElementById('root'));
@@ -257,7 +254,6 @@ function changePage(to){
             return;
         }
     }, (err)=>{
-        console.log(err)
         ReactDOM.render(<Login />, document.getElementById('root'));
         return;
     })
