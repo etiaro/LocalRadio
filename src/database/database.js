@@ -1,6 +1,5 @@
 import mysql from 'mysql';
 import moment from 'moment';
-import { ENETRESET } from 'constants';
 import { player } from '../player/player';
 
 const db = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
@@ -24,7 +23,7 @@ export const database = Object.assign({}, {
     },
 
     con: null,
-    init(cfg){
+    async init(cfg,cb){
         this.con = mysql.createConnection(cfg);
         this.con.connect((err) => {
             if (err){ 
@@ -32,7 +31,7 @@ export const database = Object.assign({}, {
               setTimeout(()=>database.init(cfg), 2000);
             }else{
               console.log("connected to database"); 
-              database.validateAndFix(cfg);
+              database.validateAndFix(cfg).then(()=>cb());
             }
         });
         this.con.on('error', function(err) {

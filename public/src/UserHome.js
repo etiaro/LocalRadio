@@ -43,7 +43,8 @@ const useStyles = theme => ({
 const TabBar = styled(AppBar)({
   position:"absolute",
   top:0,
-  fontSize: "large"
+  fontSize: "large",
+  zIndex: 'auto'
 });
 
 class UserHome extends React.Component{

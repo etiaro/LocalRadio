@@ -14,7 +14,9 @@ import http from 'http';
 import https from 'https';
 import "regenerator-runtime/runtime.js";
 
-database.init(cfg.db);
+database.init(cfg.db,()=>{
+    playerController.init();
+});
 
 const app = express();
 
@@ -47,7 +49,3 @@ var privateKey  = fs.readFileSync(path.join(__dirname, '/alice.key'), 'utf8');
 var certificate  = fs.readFileSync(path.join(__dirname, '/alice.crt'), 'utf8');
 var httpsServ = https.createServer({key: privateKey, cert: certificate}, app);
 httpsServ.listen(443);
-
-
-
-playerController.startPlaylistWatchman();
