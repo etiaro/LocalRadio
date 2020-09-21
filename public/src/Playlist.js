@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createRef } from 'react';
 
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/styles';
@@ -123,6 +123,7 @@ class Playlist extends React.Component{
       optionsCb: ()=>{},
       optionsFunctions:{delete:()=>{}}
     };
+    this.siteRef = createRef();
   }
   componentDidMount(){
     this.updateData();
@@ -195,7 +196,8 @@ class Playlist extends React.Component{
     this.setState({optionsCollapse: false, optionsCb: cb});
   }
   showOptions(pos, songId){
-    if(!pos.x) pos = {x:pos.clientX+window.scrollX,y:pos.clientY+window.scrollY}; //gathering from event
+    if(!pos.x) pos = {x:pos.clientX+this.siteRef.current.scrollLeft,y:pos.clientY+this.siteRef.current.scrollTop}; //gathering from event
+    if(pos.x + 250 > window.innerWidth - 5) pos.x = window.innerWidth - 265;
     if(this.state.optionsCollapse)
       this.hideOptions(()=>{
         this.showOptions(pos);
@@ -219,7 +221,8 @@ class Playlist extends React.Component{
         b.hour = b.getHours(); b.minutes = b.getMinutes();
         var actE = schedule[schInd].end;
         while(b.hour > actE.hour || (b.hour===actE.hour && b.minutes > actE.minutes)){
-          schInd++;actE = schedule[schInd].end;
+          schInd++;
+          actE = schedule[schInd].end;
         }
         song.addBtn = "";
         const e = this.countEndTime(song.date, song.length, actE);
@@ -257,18 +260,18 @@ class Playlist extends React.Component{
     }
 
     return (
-      <div className="Playlist" onClick={(e)=>{
+      <div ref={this.siteRef} className="Playlist" onClick={(e)=>{
         if(![...e.target.classList].some(r=>[classes.item, classes.author, classes.title].indexOf(r) >= 0)) 
           this.hideOptions()
       }}>
           <Paper className={classes.selectPaper}>
             <Grid container direction="row" alignItems="center">
               <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <KeyboardDatePicker className={classes.selectItem} margin="normal" label="Date" value={this.state.date} onChange={(d)=>this.handleDateChange(d)}/>
+                <KeyboardDatePicker className={classes.selectItem} margin="normal" label="Data" value={this.state.date} onChange={(d)=>this.handleDateChange(d)}/>
               </MuiPickersUtilsProvider>
               {this.props.isAdmin ? 
               (<Button className={classes.selectItem} variant="contained" color="primary" onClick={this.props.scheduleMenuSwitch}>
-                Schedule
+                Plan działania
               </Button>) 
               : ""}
             </Grid>

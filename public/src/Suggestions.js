@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 //TODO ALLL
 //1st class suggest
 //2nd class suggestions
@@ -6,8 +6,6 @@ import React, { useState, useEffect, createRef } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import List from '@material-ui/core/List';
-import ListItem2 from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ListItem from '@material-ui/core/Paper';
@@ -19,12 +17,10 @@ import TextField from '@material-ui/core/TextField';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import { styled } from '@material-ui/core/styles';
-import DateFnsUtils from '@date-io/date-fns';
-import {MuiPickersUtilsProvider,KeyboardDatePicker} from '@material-ui/pickers';
-import {Close as CloseIcon,PlayArrow as PlayIcon} from '@material-ui/icons';
+import {Close as CloseIcon, Check as CheckIcon} from '@material-ui/icons';
 
 
-import {downloadSong, getSuggestions, suggest, getHistory} from './ApiConnection';
+import {getSuggestions, suggest} from './ApiConnection';
 
 
 
@@ -77,7 +73,9 @@ const useStyles = makeStyles(theme => ({
   },
   texts:{
     display: 'inline-block',
-    maxWidth: "calc(100% - 50px)"
+    maxWidth: "calc(100% - 50px)",
+    whiteSpace:"nowrap",
+    overflow: "hidden"
   },
   button:{
       float: 'right',
@@ -97,10 +95,21 @@ export default function Suggestions(props) {
   const [loading, isLoading] = useState(true);
   const [totalNum, setTotalNum] = useState(-1);
   const [onlyMine, setOnlyMine] = useState(true);
+  const [waiting, setWaiting] = useState(true);
+  const [accepted, setAccepted] = useState(false);
+  const [denied, setDenied] = useState(false);
+  const [changed, setChanged] = useState(0);
  
+  const handleScroll = useCallback((e)=>{
+    if(!loading && e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 50 && totalNum > suggests.length){
+        isLoading(true);
+        setSite(site=>{return site+1;});
+    }
+  }, [loading, totalNum, suggests.length]);
   useEffect(()=>{
     var isMounted = true;
-    getSuggestions({userId: onlyMine ? props.userId : null, site:site}, (res, totalNum)=>{
+    getSuggestions({userId: onlyMine ? props.userId : null, site:site, waiting: waiting, accepted: accepted, denied: denied}, 
+    (res, totalNum)=>{
       if(isMounted){
         isLoading(false);
         setTotalNum(totalNum);
@@ -109,55 +118,111 @@ export default function Suggestions(props) {
     });
     document.getElementsByClassName("Suggestions")[0].parentElement.onscroll = handleScroll;
     return ()=>{isMounted = false;}
-  }, [site, totalNum, suggests, onlyMine]);
-
-  function handleScroll(e){
-    if(!loading && e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 50){
-        isLoading(true);
-        setSite(site+1);
-    }
-  };
+  }, [site, totalNum, onlyMine, accepted, denied, waiting, changed, handleScroll, props.userId]);
   
   function getSugColor(sug){
     if(sug.status===0) return "WHITE";
     if(sug.status===1) return "LIGHTGREEN";
     if(sug.status===-1) return "ORANGERED";
   };
+  function deny(song){
+    suggest({id: song.id, status:-1}, ()=>{
+      setChanged(changed+1);
+    });
+  }
+  function accept(song){
+    props.openAddMenu(()=>{
+      suggest({id: song.id, status:1}, ()=>{
+        setChanged(changed+1);
+      });
+    }, song.url);
+  }
 
   var LoadingWheel = suggests && suggests.length !== totalNum ?(<CircularProgress className={classes.loadingWheel}/>):null;
 
   if(!suggests) return(<div/>)
   let checkBox = "";
   if(props.userId){
-    checkBox = (<span>
+    checkBox = (<p>
           <Checkbox
             checked={onlyMine}
             onChange={()=>setOnlyMine(!onlyMine)}
             inputProps={{ 'aria-label': 'primary checkbox' }}
           /> 
           Pokaż tylko moje
-          </span>);
+          </p>);
   }
+  
+  var searchMenu = ""
+  if(props.isAdmin)
+    searchMenu = (<Paper className={classes.searchPaper}>
+                    <p><Checkbox
+                      checked={waiting}
+                      onChange={()=>setWaiting(!waiting)}
+                      inputProps={{ 'aria-label': 'primary checkbox' }}
+                    /> 
+                    Oczekujące</p>
+                    <p><Checkbox
+                      checked={accepted}
+                      onChange={()=>setAccepted(!accepted)}
+                      inputProps={{ 'aria-label': 'primary checkbox' }}
+                    /> 
+                    Zaakceptowane</p>
+                    <p><Checkbox
+                      checked={denied}
+                      onChange={()=>setDenied(!denied)}
+                      inputProps={{ 'aria-label': 'primary checkbox' }}
+                    /> 
+                    Odrzucone</p>
+                  </Paper>);
+  else
+    searchMenu = (<Paper className={classes.searchPaper}>
+                    <Button variant="contained" color="primary" onClick={()=>props.suggestWindowSwitch()}>
+                      Sugeruj
+                    </Button>
+                    {checkBox}
+                    <p>
+                    <Checkbox
+                      checked={waiting}
+                      onChange={()=>setWaiting(!waiting)}
+                      inputProps={{ 'aria-label': 'primary checkbox' }}
+                    />
+                    Oczekujące </p>
+                    <p><Checkbox
+                      checked={accepted}
+                      onChange={()=>setAccepted(!accepted)}
+                      inputProps={{ 'aria-label': 'primary checkbox' }}
+                    />
+                    Zaakceptowane </p>
+                    <p><Checkbox
+                      checked={denied}
+                      onChange={()=>setDenied(!denied)}
+                      inputProps={{ 'aria-label': 'primary checkbox' }}
+                    /> 
+                    Odrzucone</p>
+                  </Paper>);
   return (
     <div className="Suggestions" onScroll={(e)=>handleScroll(e)}>
-        <Paper className={classes.searchPaper}>
-          <Button variant="contained" color="primary" onClick={()=>props.suggestWindowSwitch()}>
-            Sugeruj
-          </Button>
-          {checkBox}
-        </Paper>
+        {searchMenu}
         <Paper className={classes.root}>
           {suggests.map(sug => (
             <div key={sug.id}>
               <ListItem className={classes.item} style={{backgroundColor:getSugColor(sug)}}>
                 <div className={classes.texts}>
                   <Typography variant="h5" component="h3" className={classes.url}>
-                    <a href={sug.url} target="_blank">{sug.url}</a>
+                    <a href={sug.url} target="_blank" rel="noopener noreferrer">{sug.url}</a>
                   </Typography>
+                  {sug.status!==1 && props.isAdmin ? (<span>
+                    <IconButton onClick={() => accept(sug)}>
+                        <CheckIcon />
+                    </IconButton>
+                    <IconButton disabled={sug.status===-1} onClick={() => deny(sug)}>
+                        <CloseIcon />
+                    </IconButton></span>) : ""}
                   <Typography component="p" className={classes.author}>
                     {sug.name}
                   </Typography>
-                  <img className={classes.authorImg} src={sug.picture}/>
+                  <img className={classes.authorImg} src={sug.picture} alt="author"/>
                 </div>
               </ListItem>
             </div>
@@ -207,7 +272,7 @@ export class Suggest extends React.Component {
                   <Tab label="Youtube" id="YT" aria-controls="youtube-tab" />
               </Tabs>
               <UrlInput label={"URL"}  margin="dense" onChange={(e)=>this.handleURLChange(e)} value={this.state.url} />
-              <p>Podaj adres URL sugerowanego utworu</p>
+              <p>Podaj adres URL utworu z serwisu YouTube</p>
               <Button disabled={this.state.btnDisabled} variant="contained" color="primary" onClick={() => { this.suggestCall(); }}>
                   Sugeruj
               </Button>

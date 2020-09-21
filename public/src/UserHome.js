@@ -1,15 +1,15 @@
 import React, {createRef} from 'react';
 import { withStyles, styled } from '@material-ui/styles';
+import {BrowserRouter as Router,Switch,Route, Link} from "react-router-dom";
 
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItem from '@material-ui/core/ListItem';
 import List from '@material-ui/core/List';
-import { ArrowBack, PlaylistAddCheck, History as HistoryBtn} from '@material-ui/icons';
+import { ArrowBack, PlaylistAddCheck, History as HistoryBtn, AddComment} from '@material-ui/icons';
 
 import Toolbar from './MusicToolbar';
 import Notifications from "./Notifications";
@@ -30,12 +30,21 @@ const useStyles = theme => ({
     homeMenu:{
         width: 300,
         maxWidth: "90vw"
+    },
+    normalText:{
+        textDecoration: "none",
+        color: "BLACK"
+    },
+    backText:{
+        textDecoration: "none",
+        color: "WHITE"
     }
 });
 const TabBar = styled(AppBar)({
   position:"absolute",
   top:0,
-  fontSize: "large"
+  fontSize: "large",
+  zIndex: 'auto'
 });
 
 class UserHome extends React.Component{
@@ -82,73 +91,92 @@ class UserHome extends React.Component{
     closeWindows(){
         this.setState({actWindow: ""});
     }
-    openSite(name){
-        this.setState({actSite:name});
-    }
-    back(){
-        this.setState({actSite:"Home"});
-    }
-
     render(){
         const {classes} = this.props;
-        let site = "";
-        let siteName = "";
-        switch(this.state.actSite){
-            case "Home": 
-                site = (<List className={classes.homeMenu}>
-                            <ListItem button onClick={()=>this.openSite("Playlist")}>
-                                <ListItemIcon><PlaylistAddCheck/></ListItemIcon>
-                                <ListItemText primary="Playlista" />
-                            </ListItem>
-                            <ListItem button onClick={()=>this.openSite("History")}>
-                                <ListItemIcon><HistoryBtn/></ListItemIcon>
-                                <ListItemText primary="Historia" />
-                            </ListItem>
-                            <ListItem button onClick={()=>this.openSite("Suggestions")}>
-                                <ListItemIcon><HistoryBtn/></ListItemIcon>
-                                <ListItemText primary="Sugerowane" />
-                            </ListItem>
-                        </List>);
-                siteName = "Strona Główna";
-                break;
-            case "Playlist":
-                site = (<Playlist isAdmin={this.state.userData.isAdmin} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} ref={this.state.playlistRef}/>);
-                siteName="Playlista";
-                break;
-            case "History":
-                site = (<History/>);
-                siteName="Historia";
-                break;
-            case "Suggestions":
-                site = (<Suggestions suggestWindowSwitch={()=>this.suggestWindowSwitch()} userId={this.state.userData.id}/>);
-                siteName = "Sugestie";
-                break;
-        }
 
         let window = "";
         if(this.state.actWindow === "libraryMenu")
             window = (<Library isWindowed={true} selectCallback={this.state.librarySelectCallback} close={()=>{this.closeWindows()}}/>);
         if(this.state.actWindow === "suggestMenu")
             window = (<Suggest close={()=>this.closeWindows()} userId={this.state.userData.id} />)
+
         return (
-            <React.Fragment>
+            <Router>
                 <Paper className="window" elevation={2} square={true}>
                     <TabBar>
                         <p>
-                            {siteName}
+                        <Switch>
+                            <Route path="/playlist">Playlista</Route>
+                            <Route path="/history">Historia</Route>
+                            <Route path="/suggestions">Sugestie</Route>
+                            <Route path="/">Strona Główna</Route>
+                        </Switch>
                         </p>
-                        <BackBtn color="inherit" onClick={() => this.back()}>
-                            <ArrowBack/>
-                        </BackBtn>
+                        
+                        <Switch>
+                            <Route path="/playlist">
+                                <Link to="/" className={classes.backText}>
+                                <BackBtn color="inherit">
+                                    <ArrowBack/>
+                                </BackBtn>
+                                </Link>
+                            </Route>
+                            <Route path="/history">
+                                <Link to="/" className={classes.backText}>
+                                <BackBtn color="inherit">
+                                    <ArrowBack/>
+                                </BackBtn>
+                                </Link>
+                            </Route>
+                            <Route path="/suggestions">
+                                <Link to="/" className={classes.backText}>
+                                <BackBtn color="inherit">
+                                    <ArrowBack/>
+                                </BackBtn>
+                                </Link>
+                            </Route>
+                        </Switch>
                     </TabBar>
                     <div className="window-content">
-                        {site}
+                    <Switch>
+                        <Route path="/playlist">
+                            <Playlist isAdmin={this.state.userData.isAdmin} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} ref={this.state.playlistRef}/>
+                        </Route>
+                        <Route path="/history">
+                            <History />
+                        </Route>
+                        <Route path="/suggestions">
+                            <Suggestions suggestWindowSwitch={()=>this.suggestWindowSwitch()} userId={this.state.userData.id}/>
+                        </Route>
+                        <Route path="/">
+                            <List>
+                                <Link to="/playlist" className={classes.normalText}>
+                                    <ListItem button>
+                                        <ListItemIcon><PlaylistAddCheck/></ListItemIcon>
+                                        <ListItemText primary="Playlista" />
+                                    </ListItem>
+                                </Link>
+                                <Link to="/history" className={classes.normalText}>
+                                    <ListItem button>
+                                        <ListItemIcon><HistoryBtn/></ListItemIcon>
+                                        <ListItemText primary="Historia" />
+                                    </ListItem>
+                                </Link>
+                                <Link to="/suggestions" className={classes.normalText}>
+                                    <ListItem button>
+                                        <ListItemIcon><AddComment/></ListItemIcon>
+                                        <ListItemText primary="Sugerowane" />
+                                    </ListItem>
+                                </Link>
+                            </List>
+                        </Route>
+                    </Switch>
                     </div>
                 </Paper>
                 {window}
                 <Notifications notifications={this.state.notifications}/>
                 <Toolbar isAdmin={this.state.userData.isAdmin} playerData={this.state.playerData}/>
-            </React.Fragment>
+            </Router>
         );
     }
 }

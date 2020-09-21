@@ -1,34 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import List from '@material-ui/core/List';
-import ListItem2 from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ListItem from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
-import AppBar from '@material-ui/core/AppBar';
-import IconButton from '@material-ui/core/IconButton';
-import { styled } from '@material-ui/core/styles';
 import DateFnsUtils from '@date-io/date-fns';
 import {MuiPickersUtilsProvider,KeyboardDatePicker} from '@material-ui/pickers';
-import {Close as CloseIcon,PlayArrow as PlayIcon} from '@material-ui/icons';
 
 
 import {getHistory} from './ApiConnection';
-
-
-const CloseBtn = styled(IconButton)({
-  position:"absolute",
-  right: 0,
-  top: 0
-});
-const TabBar = styled(AppBar)({
-  position:"absolute",
-  top:0,
-  fontSize: "large"
-});
 
 const useStyles = makeStyles(theme => ({
   root:{
@@ -83,34 +64,31 @@ export default function History(props) {
   const [loading, isLoading] = useState(true);
   const [totalNum, setTotalNum] = useState(-1);
  
+  
+  const handleScroll = useCallback((e)=>{
+    if(!loading && e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 50 && totalNum > songs.length){
+        isLoading(true);
+        setSite(site=>{return site+1;});
+    }
+  }, [loading, totalNum, songs.length]);
   useEffect(()=>{
     var isMounted = true;
-    if(!songs || totalNum !== songs.length){
-      getHistory(date, site, (res, totalNum)=>{
-        if(isMounted){
-          isLoading(false);
-          setTotalNum(totalNum);
-          setSongs(res);
-        }
-      });
-    }
+    getHistory(date, site, (res, totalNum)=>{
+      if(isMounted){
+        isLoading(false);
+        setTotalNum(totalNum);
+        setSongs(res);
+      }
+    });
     document.getElementsByClassName("History")[0].parentElement.onscroll = handleScroll;
     return ()=>{isMounted = false;}
-  }, [date, site, totalNum, songs]);
+  }, [date, site, totalNum, handleScroll]);
 
   function handleDateChange(d){
     d = new Date(d);
     if(isNaN(d)) d = new Date();
     setTotalNum(-1);
     setDate(d);
-  }
-
-  function handleScroll(e){
-    console.log(e.target.offsetHeight + e.target.scrollTop,  e.target.scrollHeight - 50)
-    if(!loading && e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 50){
-        isLoading(true);
-        setSite(site+1);
-    }
   }
 
   function translateTime(t){
@@ -130,7 +108,7 @@ export default function History(props) {
     <div className="History" onScroll={(e)=>handleScroll(e)}>
         <Paper className={classes.searchPaper}>
           <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <KeyboardDatePicker className={classes.selectItem} margin="normal" label="Date" value={date} onChange={(d)=>handleDateChange(d)}/>
+            <KeyboardDatePicker className={classes.selectItem} margin="normal" label="Data" value={date} onChange={(d)=>handleDateChange(d)}/>
           </MuiPickersUtilsProvider>
         </Paper>
         <Paper className={classes.root}>

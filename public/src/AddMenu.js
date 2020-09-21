@@ -31,19 +31,24 @@ export default class AddMenu extends React.Component {
     constructor(props){
         super(props);
         this.state={
-            url: "",
+            url: this.props.url ? this.props.url : "",
+            btnDisabled: this.props.url ? false : true,
             tab: 0
         }
     }
     
-    
     handleURLChange(e) {
-        this.setState({url: e.target.value});
+        var val = e.target.value;
+        var btnDisabled = true;
+        if(((val.includes("v=")|| val.includes("list=")) && val.includes("https://")) || val.includes("https://youtu.be/"))
+          btnDisabled = false;
+        this.setState({url: val, btnDisabled: btnDisabled});
     }
     downloadCall() {
         downloadSong(this.state.url);
+        if(this.props.addCallback) this.props.addCallback();
         this.setState({url: ""});
-        this.props.close();
+        this.props.close(true);
     }
     handleChange(event, newValue) {
         this.setState({tab: newValue});
@@ -60,10 +65,10 @@ export default class AddMenu extends React.Component {
                 <Tabs value={this.state.tab} onChange={(e, n)=>this.handleChange(e, n)} aria-label="download method tabs">
                     <Tab label="Youtube" id="YT" aria-controls="youtube-tab" />
                 </Tabs>
-                <UrlInput label={"URL"}  margin="dense" onChange={(e)=>this.handleURLChange(e)} value={this.state.url} />
-                <p>Enter URL of video or playlist</p>
-                <DownloadBtn variant="contained" color="primary" onClick={() => { this.downloadCall(); }}>
-                    Download
+                <UrlInput label={"URL"}  margin="dense" onChange={(e)=>this.handleURLChange(e)} disabled={!!this.props.url} value={this.state.url} />
+                <p>Podaj adres URL utworu bądź playlisty z serwisu YouTube</p>
+                <DownloadBtn disabled={this.state.btnDisabled} variant="contained" color="primary" onClick={() => { this.downloadCall(); }}>
+                    Pobierz
                 </DownloadBtn>
             </div>
         </Paper>);

@@ -1,10 +1,11 @@
 import YTmp3 from "youtube-mp3-downloader";
 import {database} from "../database/database";
-import youtubeInfo from "youtube-info";
+import ytdl from "ytdl-core";
 import p from 'play-sound';
 import fs from 'fs';
 import {notification} from './notification';
 import {amplifier} from './amplifier';
+import cfg from '../config/general';
 
 
 const pl = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
@@ -33,7 +34,13 @@ export const player = Object.assign({}, {
     },
     
     
-
+    YD: new YTmp3({
+        "ffmpegPath": "ffmpeg.exe",        // Where is the FFmpeg binary located?
+        "outputPath": "./Music",    // Where should the downloaded and encoded files be stored?
+        "youtubeVideoQuality": "highest",       // What video quality should be used?
+        "queueParallelism": 2,                  // How many parallel downloads/encodes should be started?
+        "progressTimeout": 2000                 // How long should be the interval of the progress reports
+    }),
     p: p({}),
     audio: null,
     shuffleTimeout: null,
@@ -41,19 +48,48 @@ export const player = Object.assign({}, {
     isShuffle: false,
     songInfo: {},
     startTime: new Date(),
+    init(){
+        player.YD.on("error", function(error, data) {
+            if(callback) callback();
+            console.log(error, data);
+            notification.notify({msg: 'Wystąpił problem podczas pobierania'}, true);
+        });
+        player.YD.on("progress", function(progress) {
+            console.log(JSON.stringify(progress));
+            //notification.notify({msg: 'Downloading '+ytid+', '+Math.round(progress.progress.percentage)+'%'}, true);
+        });
+        player.YD.on("finished", function(err, data) {
+            var song = {ytid: data.videoId,
+                    file: data.file.split('/')[2]};
+            ytdl.getBasicInfo(data.videoId).then((data)=>{
+                console.log("Finished downloading "+data.videoDetails.title+" to "+song.file);
+                notification.notify({msg: 'Pomyślnie pobrano '+data.videoDetails.title}, true);
+                song.name = data.videoDetails.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
+                song.author = data.videoDetails.author.name.replace(/[^\w\s]/gi, '').replace(/'/g, '');
+                song.length = data.videoDetails.lengthSeconds;
+                database.updateSong(song);
+            }).catch((err)=>{
+                console.log(err);
+                if(callback) callback();
+            });
+        });
+        player.startPlaylistWatchman();
+    },
     playSong(fileName, name, length, ytid){
         this.clearLastPlay();
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
-		if(fs.existsSync('./Music/'+fileName))
-			this.audio = this.p.play('./Music/'+fileName, function(err){
-				if (err) throw err;
-			});
-		else if(fs.existsSync('../Music/'+fileName))
-			this.audio = this.p.play('../Music/'+fileName, function(err){
-				if (err) throw err;
-			});
-		else
-            throw "playing failed. File not found!";
+        if(!cfg.demo){
+            if(fs.existsSync('./Music/'+fileName))
+                this.audio = this.p.play('./Music/'+fileName, function(err){
+                    if (err) throw err;
+                });
+            else if(fs.existsSync('../Music/'+fileName))
+                this.audio = this.p.play('../Music/'+fileName, function(err){
+                    if (err) throw err;
+                });
+            else
+                throw "playing failed. File not found!";
+        }
         player.startTime = new Date();
         player.songInfo.name = name;
         player.songInfo.length = length;
@@ -107,21 +143,18 @@ export const player = Object.assign({}, {
             console.log("stopped playing")
             this.sendPlayerData();
     },
-    downloadSong(ytid, callback){
+    downloadSong(ytid){
+        if(cfg.demo){
+            notification.notify({msg: 'Pobieranie jest wyłączone w trybie demostracyjnym'}, true);
+            return;
+        }
+        
         database.getSong(ytid, (res)=>{
             if(res){
                 console.log("Video already downloaded to "+res.file);
-                notification.notify({msg: 'Skipping '+ ytid + ' - already downloaded'}, true);
-                if(callback) callback();
+                notification.notify({msg: 'Pomijam '+ ytid + ' - jest już pobrane'}, true);
                 return;
             }
-            var YD = new YTmp3({
-                "ffmpegPath": "ffmpeg.exe",        // Where is the FFmpeg binary located?
-                "outputPath": "./Music",    // Where should the downloaded and encoded files be stored?
-                "youtubeVideoQuality": "highest",       // What video quality should be used?
-                "queueParallelism": 2,                  // How many parallel downloads/encodes should be started?
-                "progressTimeout": 2000                 // How long should be the interval of the progress reports
-            });
 
             var song = {
                 ytid: ytid,
@@ -131,42 +164,16 @@ export const player = Object.assign({}, {
             while (fs.existsSync("./Music/"+song.file))
                 song.file = makeid(10)+".mp3";
 
-            YD.download(ytid, song.file);
-            YD.on("error", function(error) {
-                if(callback) callback();
-                console.log(error);
-                notification.notify({msg: 'error while downloading '+ytid}, true);
-            });
-            YD.on("progress", function(progress) {
-                console.log(JSON.stringify(progress));
-                //notification.notify({msg: 'Downloading '+ytid+', '+Math.round(progress.progress.percentage)+'%'}, true);
-            });
-            YD.on("finished", function(err, data) {
-                youtubeInfo(ytid, (err, i)=>{
-                    if(err){
-                        console.log(err);
-                        if(callback) callback();
-                        return;
-                    }
-                    console.log("Finished downloading "+i.title+" to "+song.file);
-                    notification.notify({msg: 'Successfully downloaded '+i.title}, true);
-                    song.name = i.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
-                    song.author = i.owner.replace(/[^\w\s]/gi, '').replace(/'/g, '');
-                    song.length = i.duration;
-                    database.updateSong(song);
-                    if(callback) callback();
-                });
-            });
+            player.YD.download(ytid, song.file);
         });
     },
     downloadSongs(ytids){
-        var i = 0;
-        var f = this.downloadSong;
-        f(ytids[i], next);
-        function next(){
-            i++;
-            if(i < ytids.length)
-                f(ytids[i], next);
+        if(cfg.demo){
+            notification.notify({msg: 'Pobieranie jest wyłączone w trybie demostracyjnym'}, true);
+            return;
+        }
+        for(let i = 0; i < ytids.length; i++){
+            this.downloadSong(ytids[i]);
         }
     },
     findSong(songData, cb){

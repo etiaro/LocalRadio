@@ -14,7 +14,9 @@ import http from 'http';
 import https from 'https';
 import "regenerator-runtime/runtime.js";
 
-database.init(cfg.db);
+database.init(cfg.db,()=>{
+    playerController.init();
+});
 
 const app = express();
 
@@ -31,6 +33,10 @@ app.use('/api/notification', notification());
 
 //hosting built react app(front end)
 app.use(express.static(path.join(__dirname, '../public/build/')));
+app.use('/playlist', express.static(path.join(__dirname, '../public/build/')));
+app.use('/library', express.static(path.join(__dirname, '../public/build/')));
+app.use('/history', express.static(path.join(__dirname, '../public/build/')));
+app.use('/suggestions', express.static(path.join(__dirname, '../public/build/')));
 
 // errors handling
 app.use(notFound);
@@ -43,7 +49,3 @@ var privateKey  = fs.readFileSync(path.join(__dirname, '/alice.key'), 'utf8');
 var certificate  = fs.readFileSync(path.join(__dirname, '/alice.crt'), 'utf8');
 var httpsServ = https.createServer({key: privateKey, cert: certificate}, app);
 httpsServ.listen(443);
-
-
-
-playerController.startPlaylistWatchman();

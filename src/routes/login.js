@@ -2,47 +2,104 @@ import { Router } from 'express';
 import request from 'request';
 import jwt from 'jsonwebtoken';
 import {database} from '../database/database';
+import cfg from '../config/general'
 
 function validate(req, res, next){
+    if(cfg.demo){
+        req.userInfo = {};
+        req.userInfo.isAdmin = true;
+        req.userInfo.id = "1";
+        req.userInfo.demo = 1;
+        next();
+        return;
+    }
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
-            return res.status(500).send({message: err.message, data:null});
+            if(!cfg.useFacebook){
+                database.getIPUser(req.connection.remoteAddress, (result)=>{
+                    req.userInfo = result;
+                    req.userInfo = {isAdmin: false, loggedIn: true};
+                    next();
+                });
+            }else
+                return res.status(500).send({message: err.message, data:null});
         }else{
-            database.getUser(decoded.userInfo.id,(result)=>{
+            if(!cfg.useFacebook){
                 req.userInfo = decoded.userInfo;
-                req.userInfo.isAdmin = result.isAdmin;
                 next();
-            });
+            }else
+                database.getUser(decoded.userInfo.id,(result)=>{
+                    req.userInfo = decoded.userInfo;
+                    req.userInfo.isAdmin = result.isAdmin;
+                    next();
+                });
         }
       });
 }
 
 
 export const checkAdmin = (req, res, next)=>{
+    if(cfg.demo){
+        req.userInfo = {};
+        req.userInfo.isAdmin = true;
+        req.userInfo.id = "1";
+        req.userInfo.demo = 1;
+        next();
+        return;
+    }
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
-            return res.status(500).send({message: err.message, data:null});
+            if(!cfg.useFacebook){
+                return res.status(500).send({message: "You're not logged in!", data:null});
+            }else
+                return res.status(500).send({message: err.message, data:null});
         }else{
-            database.getUser(decoded.userInfo.id,(result)=>{
+            if(!cfg.useFacebook){
                 req.userInfo = decoded.userInfo;
-                req.userInfo.isAdmin = result.isAdmin;
                 if(!req.userInfo.isAdmin)                   //HERE IS THE DIFFERENCE TO VALIDATE!
-                    return res.status(500).send({message: "You're not an admin!", data:null});
+                        return res.status(500).send({message: "You're not an admin!", data:null});
                 next();
-            });
+            }else
+                database.getUser(decoded.userInfo.id,(result)=>{
+                    req.userInfo = decoded.userInfo;
+                    req.userInfo.isAdmin = result.isAdmin;
+                    if(!req.userInfo.isAdmin)                   //HERE IS THE DIFFERENCE TO VALIDATE!
+                        return res.status(500).send({message: "You're not an admin!", data:null});
+                    next();
+                });
         }
       });
 };
 export const checkLogged = (req, res, next)=>{
+    if(cfg.demo){
+        req.userInfo = {};
+        req.userInfo.isAdmin = true;
+        req.userInfo.id = "1";
+        req.userInfo.demo = 1;
+        next();
+        return;
+    }
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
-            return res.status(500).send({message: err.message, data:null});
+            if(!cfg.useFacebook){
+                database.getIPUser(req.connection.remoteAddress, (result)=>{
+                    req.userInfo = result;
+                    req.userInfo.isAdmin = false;
+                    req.userInfo.loggedIn = true;
+                    next();
+                });
+            }else
+                return res.status(500).send({message: err.message, data:null});
         }else{
-            database.getUser(decoded.userInfo.id,(result)=>{
+            if(!cfg.useFacebook){
                 req.userInfo = decoded.userInfo;
-                req.userInfo.isAdmin = result.isAdmin;
                 next();
-            });
+            }else
+                database.getUser(decoded.userInfo.id,(result)=>{
+                    req.userInfo = decoded.userInfo;
+                    req.userInfo.isAdmin = result.isAdmin;
+                    next();
+                });
         }
       });
 };
@@ -69,6 +126,13 @@ export default () => {
 
            
         });
+    }else if(req.body.password==cfg.password && !cfg.useFacebook){
+        database.getIPUser(req.connection.remoteAddress, (result)=>{
+            result.loggedIn = true;
+            result.isAdmin = true;
+            const token = jwt.sign({id: result.id, 'userInfo': result}, req.app.get('secretKey'), { expiresIn: '15m' });
+            return res.status(200).send({token:token});
+        })
     }else{
         return res.status(500).send(req.body);
     }

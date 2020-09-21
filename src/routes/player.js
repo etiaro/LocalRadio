@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {database} from '../database/database';
+import {notification} from "../player/notification";
 import {player} from '../player/player';
 import {checkLogged, checkAdmin} from './login';
 import getYouTubeID from 'get-youtube-id';
@@ -20,6 +21,9 @@ export default () => {
         });
     });
     api.post('/suggest', checkLogged, (req, res, next) => {
+        if(req.body.data && req.body.data.id && !req.userInfo.isAdmin) res.status(500).send({msg:"you need to be an admin", err:response.err});
+        
+        req.body.data.userId = req.userInfo.id;
         database.updateSuggestion(req.body.data, (response)=>{
             if(response.err)
                 res.status(500).send({msg:"wrong query", err:response.err});
@@ -86,8 +90,9 @@ export default () => {
                     player.downloadSongs(playlist);
                   });
                 return;
-            }else
+            }else{
                 req.body.ytid = getYouTubeID(req.body.url);
+            }
         }
         if(req.body.ytid){
             player.downloadSong(req.body.ytid);

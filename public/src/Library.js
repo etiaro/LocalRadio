@@ -80,17 +80,15 @@ export default function Library(props) {
  
   useEffect(()=>{
     var isMounted = true;
-    if(!songs || totalNum !== songs.length){
-      findSong({songData:{name: search, site: site}}, (res, totalNum)=>{
-        if(isMounted){
-          isLoading(false);
-          setTotalNum(totalNum);
-          setSongs(res);
-        }
-      });
-    }
+    findSong({songData:{name: search, site: site}}, (res, totalNum)=>{
+      if(isMounted){
+        isLoading(false);
+        setTotalNum(totalNum);
+        setSongs(res);
+      }
+    });
     return ()=>{isMounted = false;}
-  }, [search, site, totalNum, songs]);
+  }, [search, site, totalNum]);
 
   function handleSearchChange(event){
     setTotalNum(-1);
@@ -98,7 +96,7 @@ export default function Library(props) {
   }
 
   function handleScroll(e){
-    if(!loading && e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 50){
+    if(!loading && e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 50 && totalNum > songs.length){
         isLoading(true);
         setSite(site+1);
     }
@@ -107,10 +105,10 @@ export default function Library(props) {
   function translateTime(t){
     var res = "";
     if(t > 60){
-        res+= Math.floor(t/60)+" minutes ";
+        res+= Math.floor(t/60)+" minut ";
         t%=60;
     }
-    res+= t+" seconds";
+    res+= t+" sekund";
     return res;
   }
   function selectItem(ytid){
@@ -124,7 +122,7 @@ export default function Library(props) {
     return (
       <div className="Library" onScroll={(e)=>handleScroll(e)}>
           <Paper className={classes.searchPaper}>
-              <TextField className={classes.TextField} label={"Search"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
+              <TextField className={classes.TextField} label={"Szukaj"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
           </Paper>
           <Paper className={classes.root}>
             {songs.map(song => (
@@ -160,7 +158,7 @@ export default function Library(props) {
         </TabBar>
         <div className="window-content" onScroll={(e)=>handleScroll(e)}>
             <Paper className={classes.searchPaper}>
-                <TextField className={classes.TextField} label={"Search"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
+                <TextField className={classes.TextField} label={"Szukaj"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
             </Paper>
             <Paper className={classes.root}>
               <List>

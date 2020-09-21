@@ -4,6 +4,8 @@ node_modules
 *.mp3
 dist
 src/config/database.js
+src/config/general.js
 public/.vs/
 package-lock.json
 public/package-lock.json
+.vs/

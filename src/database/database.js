@@ -1,6 +1,5 @@
 import mysql from 'mysql';
 import moment from 'moment';
-import { ENETRESET } from 'constants';
 import { player } from '../player/player';
 
 const db = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
@@ -24,7 +23,7 @@ export const database = Object.assign({}, {
     },
 
     con: null,
-    init(cfg){
+    async init(cfg,cb){
         this.con = mysql.createConnection(cfg);
         this.con.connect((err) => {
             if (err){ 
@@ -32,7 +31,7 @@ export const database = Object.assign({}, {
               setTimeout(()=>database.init(cfg), 2000);
             }else{
               console.log("connected to database"); 
-              database.validateAndFix(cfg);
+              database.validateAndFix(cfg).then(()=>cb());
             }
         });
         this.con.on('error', function(err) {
@@ -80,10 +79,15 @@ export const database = Object.assign({}, {
           else{
             if(result.length == 0){
               console.log("TimeSchedule table not found, creating..."); 
-              this.con.query("CREATE TABLE `"+cfg.database+"`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
+              this.con.query("CREATE TABLE `"+cfg.database+"`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB; ",
               (err, result, fields)=>{
                 if(err) console.log(err)
                 else  console.log('Created table timeSchedule');
+              });
+              this.con.query("INSERT INTO `timeSchedule` (`data`, `date`) VALUES ('{\"enabledTimes\":[],\"day\":[false,false,false,false,false,false,false]}', '2020-05-12 11:22:02');",
+              (err, result, fields)=>{
+                if(err) console.log(err)
+                else  console.log('Inserted default time schedule');
               });
             }
           } 
@@ -94,7 +98,7 @@ export const database = Object.assign({}, {
           else{
             if(result.length == 0){
               console.log("Playlist table not found, creating..."); 
-              this.con.query("CREATE TABLE `"+cfg.database+"`.`playlist` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL , `was` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
+              this.con.query("CREATE TABLE `"+cfg.database+"`.`playlist` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, `was` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",
               (err, result, fields)=>{
                 if(err) console.log(err)
                 else  console.log('Created table playlist'); 
@@ -138,6 +142,16 @@ export const database = Object.assign({}, {
         if(err) console.log(err);
         else{
           cb(result[0]);
+        }
+      });
+    },
+    getIPUser(ip, cb){
+      this.con.query("INSERT IGNORE INTO `users` SET id='"+ip+"', name='Anon', mail='none', picture='https://getdrawings.com/free-icon-bw/facebook-avatar-icon-3.png', isAdmin=FALSE"+
+        ";SELECT * FROM `users` WHERE id='"+ip+"'",
+      (err, result, fields) => {
+        if(err) console.log(err);
+        else{
+          cb(result[1][0]);
         }
       });
     },
@@ -238,7 +252,7 @@ export const database = Object.assign({}, {
       }
 
       if(!site) site = 1;
-      query += " ORDER by history.date ASC ";
+      query += " ORDER by history.date DESC ";
       query += "LIMIT "+30*site;
       this.con.query(query+";"+query2+";",
         (err, result, fields) => {
@@ -268,12 +282,32 @@ export const database = Object.assign({}, {
         });
     },
     getSuggestions(sData, cb){
-      var query = "SELECT *, suggestions.id as id FROM suggestions INNER JOIN users ON users.id=suggestions.userId";
-      var query2 = "SELECT COUNT(*) FROM suggestions INNER JOIN users ON users.id=suggestions.userId";
-      if(sData && sData.userId){
-        query += " WHERE suggestions.userId="+sData.userId;
-        query2 += " WHERE suggestions.userId="+sData.userId;
+      if(!sData || !(sData.waiting || sData.accepted || sData.denied)){
+        cb([], 0);
+        return;
       }
+      var query = "SELECT *, suggestions.id as id FROM suggestions INNER JOIN users ON users.id=suggestions.userId WHERE ";
+      var query2 = "SELECT COUNT(*) FROM suggestions INNER JOIN users ON users.id=suggestions.userId WHERE ";
+      if(sData && sData.userId){
+          query += "suggestions.userId="+sData.userId+" AND ";
+          query2 += "suggestions.userId="+sData.userId+" AND ";
+      }
+      query += "status IN (";
+      query2 += "status IN (";
+      if(sData){
+        var statuses = [];
+        if(sData.waiting) statuses.push(0);
+        if(sData.accepted) statuses.push(1);
+        if(sData.denied) statuses.push(-1);
+        var tmp ="";
+        for(var i = 0; i < statuses.length; i++)
+          tmp+=statuses[i]+",";
+        if(statuses.length > 0)
+          tmp = tmp.slice(0, -1);
+        query += tmp+")";
+        query2 += tmp+")";
+      }
+
       query+= " ORDER BY suggestions.id DESC";
       var site = sData.site || 1;
       query += " LIMIT "+site*30;
