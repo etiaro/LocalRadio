@@ -65,7 +65,7 @@ export default class Login extends React.Component{
                         onClick={()=>this.loginClicked()}
                         callback={(r)=>this.responseFacebook(r)} />
                 </div>);
-        if(window.location.pathname.contains('password')){
+        if(window.location.pathname.indexOf('password') !== -1){
             content = (<div>
                 <h3>Podaj hasło</h3>
                 <TextField
