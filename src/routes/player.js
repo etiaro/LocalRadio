@@ -112,5 +112,12 @@ export default () => {
     api.post('/data/', checkLogged, (req, res, next)=>{
       return res.status(200).send(player.getInfo());
     })
+    api.post('/volume', checkAdmin, (req, res, next) =>{
+        if(req.body && req.body.hasOwnProperty('volume')){
+            amplifier.setVolume(req.body.volume)
+            return res.status(200).send({msg: "query accepted"});
+        }else
+            return res.status(500).send({msg: "Query denied. Give volume!"});
+    })
     return api;
 }

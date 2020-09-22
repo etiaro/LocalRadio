@@ -1,6 +1,8 @@
 import SerialPort from 'serialport';
 import {database} from '../database/database';
 import {player} from './player';
+import cfg from '../config/general';
+import loudness from 'loudness';
 
 const not = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod3';},_type: 'NoClassSingleton1', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
 export default not;  //singleton stuff, don't care about it
@@ -23,13 +25,14 @@ export const amplifier = Object.assign({}, {
         auto:1,
         on:2
     },
-    
+    volume: 100,
     state: '',
     mode: 0, 
     startWatchman(){
         console.log('starting');
         const port = new SerialPort('/dev/ttyUSB0', { autoOpen: false });
         var isError = false;
+        this.getVolume()
 
         // The open event is always emitted
         port.on('open', function() {
@@ -100,6 +103,18 @@ export const amplifier = Object.assign({}, {
         if(mode == this.modes.on || mode == this.modes.off || mode == this.modes.auto){
             this.mode = mode;
             database.setAmplifierMode(mode)
+            player.sendPlayerData()
         }
+    },
+    async setVolume(v){
+        this.volume = v
+        player.sendPlayerData()
+        return await loudness.setVolume(v, cfg.volumeDevice, cfg.volumeCard)
+    },
+    async getVolume(){
+        this.volume = await loudness.getVolume(cfg.volumeDevice, cfg.volumeCard)
+        player.sendPlayerData()
+        return this.volume
     }
+
 });

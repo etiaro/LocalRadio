@@ -66,7 +66,8 @@ export default class Login extends React.Component{
                         callback={(r)=>this.responseFacebook(r)} />
                 </div>);
         if(window.location.pathname.indexOf('password') !== -1){
-            content = (<div>
+            content = (<form>
+                <input autoComplete="invisible login" label="username" type="text" style={{display: "none"}}></input>
                 <h3>Podaj hasło</h3>
                 <TextField
                     id="standard-password-input"
@@ -75,7 +76,7 @@ export default class Login extends React.Component{
                     autoComplete="current-password"
                     onKeyDown={(e)=>this.passwordLogin(e)}
                     />
-            </div>);
+                </form>);
         }
         if(this.state.waiting)
             content = (<CircularProgress/>);

@@ -21,6 +21,7 @@
     "ffmpeg-normalize": "^1.8.0",
     "get-youtube-id": "^1.0.1",
     "jsonwebtoken": "^8.5.1",
+    "loudness": "https://github.com/etiaro/node-loudness.git",
     "moment": "^2.24.0",
     "mongoose": "^5.9.1",
     "mysql": "^2.18.1",

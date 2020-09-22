@@ -207,7 +207,7 @@ export const player = Object.assign({}, {
     },
     getInfo(){
         var time = Math.floor(((new Date()).getTime() - this.startTime.getTime())/1000);
-        return {isPlaying: this.isPlaying, time:time, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode};
+        return {isPlaying: this.isPlaying, time:time, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode, volume: amplifier.volume};
     },
     changePlaylist(data){
         database.modifyPlaylist(data);

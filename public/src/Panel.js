@@ -12,7 +12,7 @@ import Suggestions from './Suggestions';
 import Notifications from "./Notifications";
 import Settings from "./Settings";
 
-import {notificationHandler, getPlayerData, sendAmpMode} from './ApiConnection';
+import {notificationHandler, getPlayerData, sendAmpMode, sendVolume} from './ApiConnection';
 
 export default class Panel extends React.Component{
     constructor(props){
@@ -25,6 +25,7 @@ export default class Panel extends React.Component{
             settingsOpen: false,
             actSite: "Library",
             actWindow: "",
+            volume: 100,
             playlistRef: createRef(),
             scheduleRef: createRef(),
             librarySelectCallback: ()=>{},
@@ -44,7 +45,8 @@ export default class Panel extends React.Component{
                 this.setState({});
             }, this.state.notificationsTimeout)
         }, (data)=>{
-            this.setState({playerData:data});
+            data.amplifierMode = data.amplifierMode.toString()
+            this.setState({playerData:data, volume: data.volume});
         }, (data, data2)=>{
             this.state.playlistRef.current.updateData();
             if(data2 && this.state.scheduleRef.current)
@@ -52,7 +54,7 @@ export default class Panel extends React.Component{
         });
         getPlayerData((res)=>{
             res.amplifierMode = res.amplifierMode.toString()
-            this.setState({playerData: res});
+            this.setState({playerData: res, volume: res.volume});
         });
     }
     addWindowSwitch(downloadCallback, addUrl){
@@ -64,6 +66,11 @@ export default class Panel extends React.Component{
         playerData.amplifierMode = e.target.value;
         this.setState({playerData: playerData})
         sendAmpMode(e.target.value)
+    }
+    setVolume(e,v, send){
+        this.setState({volume: v})
+        if(send)
+            sendVolume(v)
     }
     scheduleMenuSwitch(){
         this.setState({actWindow: "scheduleMenu"});
@@ -128,7 +135,9 @@ export default class Panel extends React.Component{
                 {window}
                 <Notifications notifications={this.state.notifications}/>
                 <Toolbar isAdmin={this.state.userData.isAdmin} playerData={this.state.playerData} addWindowSwitch={()=>{this.addWindowSwitch()}} toggleSettings={()=>this.toggleSettings()}/>
-                <Settings amplifierMode={this.state.playerData.amplifierMode} setAmpMode={(e)=>this.setAmpMode(e)} open={this.state.settingsOpen} close={()=>this.toggleSettings()} 
+                <Settings amplifierMode={this.state.playerData.amplifierMode} setAmpMode={(e)=>this.setAmpMode(e)}
+                    volume={this.state.volume} setVolume={(e, v)=>this.setVolume(e, v, true)} setVolumeTemp={(e, v)=>this.setVolume(e, v)}
+                    open={this.state.settingsOpen} close={()=>this.toggleSettings()} 
                     openLibrary={()=>this.openLibrary()} openPlaylist={()=>this.openPlaylist()} openHistory={()=>this.openHistory()} openSuggestions={()=>this.openSuggestions()}/>
             </Router>
         );

@@ -1,6 +1,8 @@
 export default {
     useFacebook: false,
     password: "PASS", //used only for useFacebook=false
-    demo: false
+    demo: false,
+    volumeDevice: 'Speaker',
+    volumeCard: 1
 };
   

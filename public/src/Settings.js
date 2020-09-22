@@ -7,6 +7,8 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import Slider from '@material-ui/core/Slider';
+import Typography from '@material-ui/core/Typography';
 import { ExitToApp, LibraryBooks, PlaylistAddCheck, History, GitHub, AddComment} from '@material-ui/icons';
 import {logout} from './ApiConnection'
 import { FormControlLabel, Paper, Radio, RadioGroup } from '@material-ui/core';
@@ -18,7 +20,9 @@ const useStyles = makeStyles(theme => ({
     },
     pickMenu:{
         width: 300,
-        maxWidth: "90vw"
+        maxWidth: "90vw",
+        maxHeight: "calc(100% - 15em)",
+        overflow: "auto"
     },
     normalText:{
         textDecoration: "none",
@@ -26,17 +30,32 @@ const useStyles = makeStyles(theme => ({
     },
     amp:{
         position: "absolute",
-        bottom: 0
+        bottom: 0,
+        height: "13em",
+        width: 150
     },
     ampText:{
         color: "GRAY",
         margin: "0.2em"
+    },
+    vol:{
+        position: "absolute",
+        bottom: 0,
+        height: "13em",
+        width: 150,
+        left: 150
+    },
+    volText:{
+        color: "GRAY",
+        margin: "0.2em"
+    },
+    slider:{
+        height: "9em"
     }
 }));
 
 export default function Settings(props) {
     const classes = useStyles();
-    console.log(props.amplifierMode)
     return (
         <Drawer className={classes.drawer} anchor="right" open={props.open} onClose={props.close}>
                 <List className={classes.pickMenu}>
@@ -80,6 +99,19 @@ export default function Settings(props) {
                         <FormControlLabel value="1" control={<Radio />} label="Auto" />
                         <FormControlLabel value="0" control={<Radio />} label="Off" />
                     </RadioGroup>
+                </Paper>
+                <Paper className={classes.vol}>
+                    <Typography className={classes.volText}>Głośność</Typography>
+                    <div className={classes.slider}>
+                    <Slider
+                        orientation="vertical"
+                        value={props.volume}
+                        onChangeCommitted={(e, v)=>props.setVolume(e, v)}
+                        onChange={(e, v)=>props.setVolumeTemp(e, v)}
+                        aria-labelledby="vertical-slider"
+                        marks={[{value:100, label:100},{value:50, label:50}, {value:0, label:0}]}
+                        />
+                    </div>
                 </Paper>
         </Drawer> 
     );
