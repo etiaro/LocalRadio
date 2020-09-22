@@ -16,7 +16,7 @@ function validate(req, res, next){
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
             if(!cfg.useFacebook){
-                database.getIPUser(req.connection.remoteAddress, (result)=>{
+                database.getIPUser(req.connection.remoteAddress).then((result)=>{
                     req.userInfo = result;
                     req.userInfo = {isAdmin: false, loggedIn: true};
                     next();
@@ -28,7 +28,7 @@ function validate(req, res, next){
                 req.userInfo = decoded.userInfo;
                 next();
             }else
-                database.getUser(decoded.userInfo.id,(result)=>{
+                database.getUser(decoded.userInfo.id).then((result)=>{
                     req.userInfo = decoded.userInfo;
                     req.userInfo.isAdmin = result.isAdmin;
                     next();
@@ -60,7 +60,7 @@ export const checkAdmin = (req, res, next)=>{
                         return res.status(500).send({message: "You're not an admin!", data:null});
                 next();
             }else
-                database.getUser(decoded.userInfo.id,(result)=>{
+                database.getUser(decoded.userInfo.id).then((result)=>{
                     req.userInfo = decoded.userInfo;
                     req.userInfo.isAdmin = result.isAdmin;
                     if(!req.userInfo.isAdmin)                   //HERE IS THE DIFFERENCE TO VALIDATE!
@@ -82,7 +82,7 @@ export const checkLogged = (req, res, next)=>{
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
             if(!cfg.useFacebook){
-                database.getIPUser(req.connection.remoteAddress, (result)=>{
+                database.getIPUser(req.connection.remoteAddress).then((result)=>{
                     req.userInfo = result;
                     req.userInfo.isAdmin = false;
                     req.userInfo.loggedIn = true;
@@ -95,7 +95,7 @@ export const checkLogged = (req, res, next)=>{
                 req.userInfo = decoded.userInfo;
                 next();
             }else
-                database.getUser(decoded.userInfo.id,(result)=>{
+                database.getUser(decoded.userInfo.id).then((result)=>{
                     req.userInfo = decoded.userInfo;
                     req.userInfo.isAdmin = result.isAdmin;
                     next();
@@ -117,7 +117,7 @@ export default () => {
             }
             database.updateUser(body);
             body.loggedIn = true;
-            database.getUser(body.id,(result)=>{
+            database.getUser(body.id,).then((result)=>{
                 if(result.isAdmin)
                     body.isAdmin = true;
                 const token = jwt.sign({id: body.id, 'userInfo': body}, req.app.get('secretKey'), { expiresIn: '15m' });
@@ -127,7 +127,7 @@ export default () => {
            
         });
     }else if(req.body.password==cfg.password && !cfg.useFacebook){
-        database.getIPUser(req.connection.remoteAddress, (result)=>{
+        database.getIPUser(req.connection.remoteAddress).then((result)=>{
             result.loggedIn = true;
             result.isAdmin = true;
             const token = jwt.sign({id: result.id, 'userInfo': result}, req.app.get('secretKey'), { expiresIn: '15m' });

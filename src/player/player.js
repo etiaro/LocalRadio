@@ -6,6 +6,7 @@ import fs from 'fs';
 import {notification} from './notification';
 import {amplifier} from './amplifier';
 import cfg from '../config/general';
+import normalize from 'ffmpeg-normalize';
 
 
 const pl = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
@@ -60,6 +61,27 @@ export const player = Object.assign({}, {
         player.YD.on("finished", function(err, data) {
             var song = {ytid: data.videoId,
                     file: data.file.split('/')[2]};
+                //NORMALIZATION
+            fs.rename(data.file, data.file+".TEMP", ()=>{
+                normalize({
+                    input: data.file+".TEMP",
+                    output: data.file,
+                    loudness: {
+                        normalization: 'rms',
+                        target:
+                        {
+                            input_i: -10    //TARGET NORMALISED VOLUME
+                        }
+                    },
+                    verbose: false
+                }).then(normalized  => {
+                    console.log("Normalized "+normalized.info.output.split("/")[2]+"!")
+                    fs.unlinkSync(data.file+".TEMP");
+                }).catch(err =>{
+                    console.error(err)
+                });
+            })
+                    
             ytdl.getBasicInfo(data.videoId).then((data)=>{
                 console.log("Finished downloading "+data.videoDetails.title+" to "+song.file);
                 notification.notify({msg: 'Pomyślnie pobrano '+data.videoDetails.title}, true);
@@ -93,7 +115,7 @@ export const player = Object.assign({}, {
         player.songInfo.length = length;
         player.isPlaying = true;
         player.sendPlayerData();
-        database.addHistory({date: new Date(), ytid: ytid}, ()=>{});
+        database.addHistory({date: new Date(), ytid: ytid});
         player.shuffleTimeout = setTimeout(()=>{
             player.isPlaying = false;
             player.songInfo = {};
@@ -104,7 +126,7 @@ export const player = Object.assign({}, {
     nextShuffle(){
         if(this.isShuffle){
             this.isShuffle = true;
-            database.getRandomSong((song)=>{
+            database.getRandomSong().then((song)=>{
                 if(song)
                     player.playSong(song.file, song.name, song.length, song.ytid);
             });
@@ -148,7 +170,7 @@ export const player = Object.assign({}, {
             return;
         }
         
-        database.getSong(ytid, (res)=>{
+        database.getSong(ytid).then((res)=>{
             if(res){
                 console.log("Video already downloaded to "+res.file);
                 notification.notify({msg: 'Pomijam '+ ytid + ' - jest już pobrane'}, true);
@@ -175,26 +197,17 @@ export const player = Object.assign({}, {
             this.downloadSong(ytids[i]);
         }
     },
-    findSong(songData, cb){
-        database.findSong(songData, cb);
-    },
-    getHistory(date, site, cb){
-        database.getHistory(date, site, cb);
-    },
     sendPlayerData(){
         notification.notify({player: this.getInfo()});
     },
     sendPlaylistData(){
-        player.getPlaylist(null, (data)=>{
+        database.getAllPlaylistData(null).then((data)=>{
             notification.notify({amplifier: data[0], playlist: data[1]});
         });
     },
     getInfo(){
         var time = Math.floor(((new Date()).getTime() - this.startTime.getTime())/1000);
         return {isPlaying: this.isPlaying, time:time, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode};
-    },
-    getPlaylist(date, cb){
-        database.getAllPlaylistData(date, cb);
     },
     changePlaylist(data){
         database.modifyPlaylist(data);
@@ -207,7 +220,7 @@ export const player = Object.assign({}, {
     startPlaylistWatchman(){
         amplifier.startWatchman();
         setInterval(()=>{
-            database.getPlaylistData((res)=>{
+            database.getPlaylistData().then((res)=>{
                 if(res.length == 0)
                     return;
                 if(res[0].date*1000 < new Date().getTime()){

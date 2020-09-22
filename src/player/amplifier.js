@@ -55,7 +55,7 @@ export const amplifier = Object.assign({}, {
                     }
                 });
             else{
-                database.getScheduleAndAmplifierMode((res)=>{
+                database.getScheduleAndAmplifierMode().then((res)=>{
                     amplifier.mode = parseInt(res.amplifierMode);
                     if(amplifier.mode === amplifier.modes.on){
                         port.write('+');

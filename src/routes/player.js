@@ -12,20 +12,20 @@ export default () => {
 
     // /api/player
     api.post('/list', checkLogged, (req, res, next) => {
-        player.findSong(req.body.songData, (result, totalNum)=>{
-            res.status(200).send({msg: "query accepted", result: result, totalNum: totalNum});
+        database.findSong(req.body.songData).then((r)=>{
+            res.status(200).send({msg: "query accepted", result: r.result, totalNum: r.totalNum});
         });
     });
     api.post('/history', checkLogged, (req, res, next) => {
-        player.getHistory(req.body.date, req.body.site, (result, totalNum)=>{
-            res.status(200).send({msg: "query accepted", result: result, totalNum: totalNum});
+        database.getHistory(req.body.date, req.body.site).then((r)=>{
+            res.status(200).send({msg: "query accepted", result: r.result, totalNum: r.totalNum});
         });
     });
     api.post('/suggest', checkLogged, (req, res, next) => {
         if(req.body.data && req.body.data.id && !req.userInfo.isAdmin) res.status(500).send({msg:"you need to be an admin", err:response.err});
         
         req.body.data.userId = req.userInfo.id;
-        database.updateSuggestion(req.body.data, (response)=>{
+        database.updateSuggestion(req.body.data).then((response)=>{
             if(response.err)
                 res.status(500).send({msg:"wrong query", err:response.err});
             else
@@ -33,12 +33,12 @@ export default () => {
         });
     });
     api.post('/suggestions', checkLogged, (req, res, next) => {
-        database.getSuggestions(req.body.data, (result, totalNum)=>{
-            res.status(200).send({msg: "query accepted", result: result, totalNum: totalNum});
+        database.getSuggestions(req.body.data).then((r)=>{
+            res.status(200).send({msg: "query accepted", result: r.result, totalNum: r.totalNum});
         });
     });
     api.post('/getplaylist', checkLogged, (req, res, next)=> {
-        player.getPlaylist(req.body.date, (data)=>{
+        database.getAllPlaylistData(req.body.date).then((data)=>{
             return res.status(200).send({amplifier: data[0], playlist: data[1]});
         });
     });
