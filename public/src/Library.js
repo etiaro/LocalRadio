@@ -88,7 +88,7 @@ export default function Library(props) {
       }
     });
     return ()=>{isMounted = false;}
-  }, [search, site, totalNum]);
+  }, [search, site, totalNum]); //TODO update on new song
 
   function handleSearchChange(event){
     setTotalNum(-1);

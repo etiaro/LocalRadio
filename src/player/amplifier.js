@@ -91,7 +91,7 @@ export const amplifier = Object.assign({}, {
                         }else{
                             port.write('-');
                             if(lastMode !== '-')
-                                player.stopPlaying();
+                                player.stopPlaying(true);
                             lastMode = '-';
                         }
                     }

@@ -101,11 +101,11 @@ export const player = Object.assign({}, {
         if(!cfg.demo){
             if(fs.existsSync('./Music/'+fileName))
                 this.audio = this.p.play('./Music/'+fileName, function(err){
-                    if (err) throw err;
+                    if (err && !err.killed) throw err;
                 });
             else if(fs.existsSync('../Music/'+fileName))
                 this.audio = this.p.play('../Music/'+fileName, function(err){
-                    if (err) throw err;
+                    if (err && !err.killed) throw err;
                 });
             else
                 throw "playing failed. File not found!";
@@ -155,11 +155,12 @@ export const player = Object.assign({}, {
         }
         this.songInfo = {};
     }, 
-    stopPlaying(){
+    stopPlaying(leaveSuffle){
         this.clearLastPlay();
         var tmp = this.isPlaying;
         this.isPlaying = false;
-        this.isShuffle = false;
+        if(!leaveSuffle)
+            this.isShuffle = false;
         if(tmp)
             console.log("stopped playing")
             this.sendPlayerData();
