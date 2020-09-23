@@ -316,7 +316,8 @@ export const database = Object.assign({}, {
     },
     async getScheduleAndAmplifierMode(){ 
       var r = await this.queryPromise("SELECT * FROM `timeSchedule` ORDER BY `id` DESC LIMIT 1")
-      return JSON.parse(r.rows[0])
+      r.rows[0].data = JSON.parse(r.rows[0].data)
+      return r.rows[0]
     },
     async setAmplifierMode(mode){
       mode = parseInt(mode);
