@@ -20,7 +20,7 @@ export const amplifier = Object.assign({}, {
       this._type = value;
     },
 
-    modes: {    //TODO get fom settings
+    modes: {
         off:0,
         auto:1,
         on:2
@@ -71,7 +71,7 @@ export const amplifier = Object.assign({}, {
                         lastMode = '-';
                     }else if(amplifier.mode === amplifier.modes.auto){
                         const now = new Date();
-                        if(!res.day[now.getDay()]){
+                        if(!res.data.day[now.getDay()]){
                             port.write('-');
                             if(lastMode !== '-')
                                 player.stopPlaying();
@@ -79,7 +79,7 @@ export const amplifier = Object.assign({}, {
                             return;
                         }
                         var enable = false;
-                        for(let t of res.enabledTimes){
+                        for(let t of res.data.enabledTimes){
                             if(t.begin.hour <= now.getHours() && t.begin.minutes <= now.getMinutes() &&
                                 t.end.hour >= now.getHours() && t.end.minutes >= now.getMinutes())
                                 enable = true;

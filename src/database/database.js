@@ -125,11 +125,11 @@ export const database = Object.assign({}, {
     async getRandomSong(){
       return (await this.queryPromise("SELECT  * FROM songs ORDER BY RAND() LIMIT 1;")).rows[0];
     },
-    async updateSong(songData){
+    async updateSong(songData){ //TODO UPDATE/REMOVE
       return (await this.queryPromise("INSERT INTO `songs`(`ytid`, `name`, `length`, `author`, `file`) VALUES "+ 
             "('"+songData.ytid+"','"+songData.name+"','"+songData.length+"','"+songData.author+"','"+songData.file+"')")).rows;
     },
-    async findSong(songData){
+    async findSong(songData){ //TODO better searching!
       var query = "SELECT * FROM `songs` ";
       var query2 = "SELECT COUNT(*) FROM `songs` ";
       if(songData){
@@ -316,7 +316,7 @@ export const database = Object.assign({}, {
     },
     async getScheduleAndAmplifierMode(){ 
       var r = await this.queryPromise("SELECT * FROM `timeSchedule` ORDER BY `id` DESC LIMIT 1")
-      return JSON.parse(r.rows[0].data)
+      return JSON.parse(r.rows[0])
     },
     async setAmplifierMode(mode){
       mode = parseInt(mode);
