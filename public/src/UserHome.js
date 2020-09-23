@@ -76,7 +76,8 @@ class UserHome extends React.Component{
         }, (data)=>{
             this.setState({playerData:data});
         }, (data, data2)=>{
-            this.state.playlistRef.current.updateData();
+            if(this.state.playlistRef.current)
+                this.state.playlistRef.current.updateData();
         });
         getPlayerData((res)=>{
             this.setState({playerData: res});

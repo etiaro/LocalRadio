@@ -99,13 +99,16 @@ export const player = Object.assign({}, {
         this.clearLastPlay();
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
         if(!cfg.demo){
+            //p.play(FILE, { mplayer: [ '-ss', ( Track.obj.begin + Math.floor( ( Now - Schedule.obj.schedule[Current].begin ) / 1000 ) ), 
+            //'−volume', 
+            //Track.obj.volume, '-really-quiet' ] }, (er)=>{}
             if(fs.existsSync('./Music/'+fileName))
                 this.audio = this.p.play('./Music/'+fileName, function(err){
-                    if (err && !err.killed) throw err;
+                    if (err && !err.killed && err !== 1) throw err;
                 });
             else if(fs.existsSync('../Music/'+fileName))
                 this.audio = this.p.play('../Music/'+fileName, function(err){
-                    if (err && !err.killed) throw err;
+                    if (err && !err.killed && err !== 1) throw err;
                 });
             else
                 throw "playing failed. File not found!";

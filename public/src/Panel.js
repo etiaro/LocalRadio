@@ -48,7 +48,8 @@ export default class Panel extends React.Component{
             data.amplifierMode = data.amplifierMode.toString()
             this.setState({playerData:data, volume: data.volume});
         }, (data, data2)=>{
-            this.state.playlistRef.current.updateData();
+            if(this.state.playlistRef.current)
+                this.state.playlistRef.current.updateData();
             if(data2 && this.state.scheduleRef.current)
                 this.state.scheduleRef.current.updateData();
         });
