@@ -81,7 +81,7 @@ export const amplifier = Object.assign({}, {
                         var enable = false;
                         for(let t of res.data.enabledTimes){
                             if(t.begin.hour <= now.getHours() && t.begin.minutes <= now.getMinutes() &&
-                                t.end.hour >= now.getHours() && t.end.minutes >= now.getMinutes())
+                                t.end.hour >= now.getHours() && t.end.minutes > now.getMinutes())
                                 enable = true;
                         }
                         if(enable){
