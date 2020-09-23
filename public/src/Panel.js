@@ -36,16 +36,9 @@ export default class Panel extends React.Component{
 
     componentDidMount(){
         document.body.style.background = "#FFFFFF";
-        notificationHandler((data)=>{
-            var tmp = this.state.notifications;
-            tmp.push(data);
-            this.setState({notifications:tmp});
-            setTimeout(()=>{
-                var tmp = this.state.notifications;
-                tmp.shift();
-                this.setState({});
-            }, this.state.notificationsTimeout)
-        }, (data)=>{
+        notificationHandler(
+        (d)=>this.notify(d)
+        , (data)=>{
             data.amplifierMode = data.amplifierMode.toString()
             this.setState({playerData:data, volume: data.volume});
         }, (data, data2)=>{
@@ -60,6 +53,16 @@ export default class Panel extends React.Component{
             res.amplifierMode = res.amplifierMode.toString()
             this.setState({playerData: res, volume: res.volume});
         });
+    }
+    notify(data){
+        var tmp = this.state.notifications;
+        tmp.push(data);
+        this.setState({notifications:tmp});
+        setTimeout(()=>{
+            var tmp = this.state.notifications;
+            tmp.shift();
+            this.setState({});
+        }, this.state.notificationsTimeout)
     }
     addWindowSwitch(downloadCallback, addUrl){
         if(!downloadCallback) downloadCallback = ()=>{};
@@ -124,7 +127,7 @@ export default class Panel extends React.Component{
                         <Library libUpdater={this.state.libUpdater}/>
                     </Route>
                     <Route path="/playlist">
-                        <Playlist isAdmin={this.state.userData.isAdmin} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} scheduleMenuSwitch={()=>{this.scheduleMenuSwitch()}} ref={this.state.playlistRef}/>
+                        <Playlist notify={(d)=>this.notify(d)} isAdmin={this.state.userData.isAdmin} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} scheduleMenuSwitch={()=>{this.scheduleMenuSwitch()}} ref={this.state.playlistRef}/>
                     </Route>
                     <Route path="/history">
                         <History />

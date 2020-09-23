@@ -1,6 +1,7 @@
 import mysql from 'mysql';
 import moment from 'moment';
 import { player } from '../player/player';
+import cfg from '../config/general';
 
 const db = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
 export default db;  //singleton stuff, don't care about it
@@ -123,7 +124,8 @@ export const database = Object.assign({}, {
       return (await this.queryPromise("SELECT * FROM `songs` WHERE ytid='"+songId+"'")).rows[0];
     },
     async getRandomSong(){
-      return (await this.queryPromise("SELECT  * FROM songs ORDER BY RAND() LIMIT 1;")).rows[0];
+      return (await this.queryPromise("SET @id= (SELECT IFNULL((SELECT a.ytid FROM (SELECT ytid FROM ( SELECT COUNT(*) AS a, ytid FROM history WHERE YEARWEEK(DATE(date))=YEARWEEK(CURRENT_DATE) GROUP BY ytid UNION SELECT COUNT(*) as a, ytid FROM playlist WHERE YEARWEEK(DATE(date))=YEARWEEK(CURRENT_DATE) GROUP BY ytid UNION SELECT 0 as a, ytid FROM songs GROUP BY ytid )tbl GROUP BY ytid HAVING SUM(tbl.a) < "+cfg.maxPerWeek+")a INNER JOIN (SELECT SUM(tbl.a) as s, ytid FROM ( SELECT COUNT(*) AS a, ytid FROM history WHERE DATE(date)=CURRENT_DATE GROUP BY ytid UNION SELECT COUNT(*) as a, ytid FROM playlist WHERE DATE(date)=CURRENT_DATE GROUP BY ytid UNION SELECT 0 as a, ytid FROM songs GROUP BY ytid )tbl GROUP BY ytid HAVING SUM(tbl.a) < "+cfg.maxPerDay+")b ON a.ytid = b.ytid ORDER BY RAND() LIMIT 1), (SELECT ytid FROM songs ORDER BY RAND() LIMIT 1)) AS ytid);"+
+      "SELECT * FROM songs WHERE ytid=@id;")).rows[1][0];
     },
     async updateSong(songData){ //TODO UPDATE/REMOVE
       return (await this.queryPromise("INSERT INTO `songs`(`ytid`, `name`, `length`, `author`, `file`) VALUES "+ 
@@ -259,7 +261,7 @@ export const database = Object.assign({}, {
               ).rows[1];
     },
 
-    async modifyPlaylist(entry){
+    async modifyPlaylist(entry, isAdmin){
       if(typeof(entry.date) === "string")
         entry.date = new Date(entry.date);
       if(entry.date instanceof Date)
@@ -289,13 +291,27 @@ export const database = Object.assign({}, {
           })
         }
       }else
-        return new Promise(resolve =>{
-          this.queryPromise("INSERT INTO `playlist`(`ytid`, date) VALUES ('"+entry.ytid+"', FROM_UNIXTIME("+entry.date+"))")
-          .then((r)=>{
-            database.fixPlaylistToFitSchedule()
-            resolve(r.rows)
+        if(isAdmin){
+          return new Promise(resolve =>{
+            this.queryPromise("INSERT INTO `playlist`(`ytid`, date) VALUES ('"+entry.ytid+"', FROM_UNIXTIME("+entry.date+")) ")
+            .then((r)=>{
+              database.fixPlaylistToFitSchedule()
+              resolve(r.rows.affectedRows)
+            })
           })
-        })
+        }else{
+          return new Promise(resolve =>{
+            this.queryPromise("INSERT INTO playlist(ytid, date) SELECT '"+entry.ytid+"', FROM_UNIXTIME("+entry.date+") WHERE (SELECT count(*) "+
+            "FROM history WHERE DATE(date) = DATE(FROM_UNIXTIME("+entry.date+")) AND ytid='"+entry.ytid+"') + " + 
+            "(SELECT count(*) FROM playlist WHERE DATE(date) = DATE(FROM_UNIXTIME("+entry.date+")) AND date > CURRENT_TIMESTAMP AND ytid='"+entry.ytid+"') < "+cfg.maxPerDay+
+            " AND  (SELECT count(*) FROM history WHERE YEARWEEK(DATE(date), 1) = YEARWEEK(DATE(FROM_UNIXTIME("+entry.date+")), 1) AND ytid='"+entry.ytid+"') + "+
+            "(SELECT count(*) FROM playlist WHERE YEARWEEK(DATE(date), 1) = YEARWEEK(DATE(FROM_UNIXTIME("+entry.date+")), 1) AND date > CURRENT_TIMESTAMP AND ytid='"+entry.ytid+"') < "+cfg.maxPerWeek)
+              .then((r)=>{
+                database.fixPlaylistToFitSchedule()
+                resolve(r.rows.affectedRows)
+            })
+          })
+        }
       //date FROM_UNIXTIME('Date.toMiliseconds or smthg')
       //modify or update entry
     },

@@ -65,16 +65,9 @@ class UserHome extends React.Component{
     }
 
     componentDidMount(){
-        notificationHandler((data)=>{
-            var tmp = this.state.notifications;
-            tmp.push(data);
-            this.setState({notifications:tmp});
-            setTimeout(()=>{
-                var tmp = this.state.notifications;
-                tmp.shift();
-                this.setState({});
-            }, this.state.notificationsTimeout)
-        }, (data)=>{
+        notificationHandler(
+        (d)=>this.notify(d)
+        , (data)=>{
             this.setState({playerData:data});
         }, (data, data2)=>{
             if(this.state.playlistRef.current)
@@ -85,6 +78,16 @@ class UserHome extends React.Component{
         getPlayerData((res)=>{
             this.setState({playerData: res});
         });
+    }
+    notify(data){
+        var tmp = this.state.notifications;
+        tmp.push(data);
+        this.setState({notifications:tmp});
+        setTimeout(()=>{
+            var tmp = this.state.notifications;
+            tmp.shift();
+            this.setState({});
+        }, this.state.notificationsTimeout)
     }
     libraryWindowSwitch(cb){
         this.setState({actWindow: "libraryMenu", librarySelectCallback: cb});
@@ -144,7 +147,7 @@ class UserHome extends React.Component{
                     <div className="window-content">
                     <Switch>
                         <Route path="/playlist">
-                            <Playlist isAdmin={this.state.userData.isAdmin} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} ref={this.state.playlistRef}/>
+                            <Playlist notify={(d)=>this.notify(d)} isAdmin={this.state.userData.isAdmin} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} ref={this.state.playlistRef}/>
                         </Route>
                         <Route path="/history">
                             <History />

@@ -292,12 +292,17 @@ function getPlaylistData(date, cb){
     if(cb==null)
         return JSON.parse(xmlHttp.responseText);
 }
-function sendPlaylistData(data){
+function sendPlaylistData(data, cb){
     if(data.date instanceof Date) data.date = data.date.getTime()
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", adress+"player/playlist/");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", loginToken);
+    if(cb!==null){
+        xmlHttp.onload = ()=>{
+            cb(JSON.parse(xmlHttp.responseText))
+        }
+    }
     xmlHttp.send(JSON.stringify({entry: data}));
     return false;
 }

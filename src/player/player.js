@@ -49,6 +49,7 @@ export const player = Object.assign({}, {
     isShuffle: false,
     songInfo: {},
     startTime: new Date(),
+    downloadQ: [],
     init(){
         player.YD.on("error", function(error, data) {
             console.log(error, data);
@@ -61,6 +62,9 @@ export const player = Object.assign({}, {
         player.YD.on("finished", function(err, data) {
             var song = {ytid: data.videoId,
                     file: data.file.split('/')[2]};
+
+            player.downloadQ.splice(player.downloadQ.indexOf(data.videoId),1)
+
                 //NORMALIZATION
             fs.rename(data.file, data.file+".TEMP", ()=>{
                 normalize({
@@ -183,6 +187,11 @@ export const player = Object.assign({}, {
                 notification.notify({msg: 'Pomijam '+ ytid + ' - jest już pobrane'}, true);
                 return;
             }
+            if(player.downloadQ.indexOf(ytid) !== -1){
+                console.log("Video already in queue");
+                notification.notify({msg: 'Pomijam '+ ytid + ' - już w kolejce'}, true);
+                return;
+            }
 
             var song = {
                 ytid: ytid,
@@ -192,6 +201,8 @@ export const player = Object.assign({}, {
             while (fs.existsSync("./Music/"+song.file))
                 song.file = makeid(10)+".mp3";
 
+
+            player.downloadQ.push(ytid);
             player.YD.download(ytid, song.file);
         })
     },
@@ -216,9 +227,9 @@ export const player = Object.assign({}, {
         var time = Math.floor(((new Date()).getTime() - this.startTime.getTime())/1000);
         return {isPlaying: this.isPlaying, time:time, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode, volume: amplifier.volume};
     },
-    changePlaylist(data){
-        database.modifyPlaylist(data);
+    changePlaylist(data, isAdmin){
         this.sendPlaylistData();
+        return database.modifyPlaylist(data, isAdmin);
     },
     changeSchedule(data){
         database.setAmplifierTimeSchedule(data);

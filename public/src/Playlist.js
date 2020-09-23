@@ -188,7 +188,10 @@ class Playlist extends React.Component{
     }
     date.setSeconds(0);
     this.props.libraryShow((ytid)=>{
-      sendPlaylistData({ytid: ytid, date:date});
+      sendPlaylistData({ytid: ytid, date:date}, (data)=>{
+        if(data.err)
+          this.props.notify(data.err);
+      });
     });
   }
   hideOptions(cb){

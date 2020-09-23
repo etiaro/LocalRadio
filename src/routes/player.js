@@ -46,12 +46,16 @@ export default () => {
         if(req.body.entry && (req.body.entry.id || req.body.entry.ytid)){
             if(!!req.body.entry.id)
                 checkAdmin(req,res,()=>{
-                    player.changePlaylist(req.body.entry)
+                    player.changePlaylist(req.body.entry, req.userInfo.isAdmin)
                     return res.status(200).send({msg: "query accepted"});
                 });
             else{
-                player.changePlaylist(req.body.entry)
-                return res.status(200).send({msg: "query accepted"});
+                player.changePlaylist(req.body.entry, req.userInfo.isAdmin).then(done=>{
+                    if(!done)
+                        return res.status(200).send({msg: "query denied", err: "Osiągnięto już limit dzienny/tygodniowy dla tego utworu"});
+                    else
+                        return res.status(200).send({msg: "query accepted"});
+                })
             }
         }else
             return res.status(500).send({msg:"no entry entered"})
