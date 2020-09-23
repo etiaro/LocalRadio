@@ -2,7 +2,8 @@ import { Router } from 'express';
 import request from 'request';
 import jwt from 'jsonwebtoken';
 import {database} from '../database/database';
-import cfg from '../config/general'
+import cfg from '../config/general';
+import crypto from 'crypto-js';
 
 function validate(req, res, next){
     if(cfg.demo){
@@ -126,7 +127,7 @@ export default () => {
 
            
         });
-    }else if(req.body.password==cfg.password && !cfg.useFacebook){
+    }else if(req.body.password===""+crypto.MD5(cfg.password) && !cfg.useFacebook){
         database.getIPUser(req.connection.remoteAddress).then((result)=>{
             result.loggedIn = true;
             result.isAdmin = true;
@@ -139,7 +140,9 @@ export default () => {
   });
 
   api.post('/data/', validate, (req, res, next)=>{
-    return res.status(200).send(req.userInfo);
+    var data = req.userInfo;
+    data.useFacebook = cfg.useFacebook;
+    return res.status(200).send(data);
   })
   
   return api;

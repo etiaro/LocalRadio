@@ -57,6 +57,7 @@ class UserHome extends React.Component{
             playerData: {song:{}},
             actSite: "Home",
             actWindow: "",
+            libUpdater: false,
             playlistRef: createRef(),
             librarySelectCallback: ()=>{},
             width: window.innerWidth,
@@ -78,6 +79,8 @@ class UserHome extends React.Component{
         }, (data, data2)=>{
             if(this.state.playlistRef.current)
                 this.state.playlistRef.current.updateData();
+        }, (song)=>{
+            this.setState({libUpdater:!this.state.libUpdater})
         });
         getPlayerData((res)=>{
             this.setState({playerData: res});
@@ -97,7 +100,7 @@ class UserHome extends React.Component{
 
         let window = "";
         if(this.state.actWindow === "libraryMenu")
-            window = (<Library isWindowed={true} selectCallback={this.state.librarySelectCallback} close={()=>{this.closeWindows()}}/>);
+            window = (<Library libUpdater={this.state.libUpdater} isWindowed={true} selectCallback={this.state.librarySelectCallback} close={()=>{this.closeWindows()}}/>);
         if(this.state.actWindow === "suggestMenu")
             window = (<Suggest close={()=>this.closeWindows()} userId={this.state.userData.id} />)
 

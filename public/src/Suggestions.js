@@ -1,8 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-//TODO ALLL
-//1st class suggest
-//2nd class suggestions
-//3rd class userWindow
 
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';

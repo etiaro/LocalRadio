@@ -65,7 +65,14 @@ export default class Login extends React.Component{
                         onClick={()=>this.loginClicked()}
                         callback={(r)=>this.responseFacebook(r)} />
                 </div>);
-        if(window.location.pathname.indexOf('password') !== -1){
+
+        if(!this.props.useFacebook)
+        content = (<div>
+                <h3>Witamy na stronie radiowęzła!</h3>
+                <p>Tutaj możesz sprawdzić, co było i jest aktualnie odtwarzane, zasugerować dodanie jakiejś piosenki oraz dodawać piosenki do playlisty.</p>
+                <p>Jeżeli widzisz tą stronę to prawdopodobnie serwer jest restartowany/zepsuty, spróbuj odświeżyć stronę :)</p>
+            </div>);
+        if(window.location.pathname.indexOf('password') !== -1)
             content = (<form>
                 <input autoComplete="invisible login" label="username" type="text" style={{display: "none"}}></input>
                 <h3>Podaj hasło</h3>
@@ -77,7 +84,7 @@ export default class Login extends React.Component{
                     onKeyDown={(e)=>this.passwordLogin(e)}
                     />
                 </form>);
-        }
+                
         if(this.state.waiting)
             content = (<CircularProgress/>);
         else if(this.state.noConnection)
@@ -118,7 +125,7 @@ export function DemoLogin(props){
 }
 
 export function DemoAlert(props){
-    return(//TODO styling of button, add some text!
+    return(
         <Container id="Cont">
             <Paper id="Paper" elevation={2} square={true}>
                 <h3>Wersja demonstracyjna</h3>

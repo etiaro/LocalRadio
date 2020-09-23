@@ -4,6 +4,7 @@ import Panel from './Panel';
 import UserHome from './UserHome';
 import Login, {DemoAlert, DemoLogin} from './Login';
 import Cookies from 'universal-cookie';
+import crypto from 'crypto-js';
 
 
 function HANDLEERROR(err){
@@ -23,16 +24,17 @@ function makeid(length) {
  }
 
 const cookies = new Cookies();
+var loginToken = cookies.get('accessToken');
 
 const adress = "http://"+window.location.hostname+"/api/";
 var notificationID = makeid(8);
-var actNotID = {msg:0, player:0, playlist:0};
+var actNotID = {player:0, playlist:0};
 
 function getUserData(cb, errCb){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"login/data/", cb!=null); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));
+    xmlHttp.setRequestHeader("x-access-token", loginToken);
     if(cb!=null)
         xmlHttp.onload = ()=>{
             cb(xmlHttp.responseText);
@@ -56,7 +58,8 @@ function login(response, cb){
             if(xmlHttp.status !== 200){
                 cb(false); return;
             }
-            cookies.set('accessToken',  JSON.parse(xmlHttp.responseText).token, { Expires: new Date(new Date().getTime()+3600000).toUTCString() });
+            cookies.set('accessToken',  JSON.parse(xmlHttp.responseText).token, { Expires: new Date(new Date().getTime()+3600000).toUTCString(), path:"/" });
+            loginToken = JSON.parse(xmlHttp.responseText).token;
             changePage(window.location.pathname.indexOf("password") !== -1 ? 1 : null);
             cb(true);
         }
@@ -72,21 +75,24 @@ function login(response, cb){
         if(response.accessToken)
             xmlHttp.send("accessToken="+response.accessToken);
         else
-            xmlHttp.send("password="+response.password);
+            xmlHttp.send("password="+crypto.MD5(response.password));
     }catch(err){
         return -1;
     }
+
     if(cb==null){
         if(xmlHttp.status === 200){
-            cookies.set('accessToken',  JSON.parse(xmlHttp.responseText).token, { Expires: new Date(new Date().getTime()+3600000).toUTCString() });
-            changePage();
+            cookies.set('accessToken',  JSON.parse(xmlHttp.responseText).token, { Expires: new Date(new Date().getTime()+3600000).toUTCString(), path:"/" });
+            loginToken = JSON.parse(xmlHttp.responseText).token;
+            changePage(window.location.pathname.indexOf("password") !== -1 ? 1 : null);
             return true;
         }
         return false;
     }
 }
 function logout(){
-    cookies.remove('accessToken');
+    cookies.remove('accessToken',{path:"/"});
+    loginToken = "";
     document.location.reload();
 }
 
@@ -94,7 +100,7 @@ function downloadSong(ytUrl){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/download");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     xmlHttp.onerror = HANDLEERROR;
     xmlHttp.onload = ()=>{ 
         if(xmlHttp.status !== 200)
@@ -107,7 +113,7 @@ function playSong(fileName, songName, length, ytid){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/play");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     xmlHttp.onerror = HANDLEERROR;
     xmlHttp.onload = ()=>{ 
         if(xmlHttp.status !== 200)
@@ -120,7 +126,7 @@ function switchShuffle(play){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/play");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     xmlHttp.onerror = HANDLEERROR;
     xmlHttp.onload = ()=>{ 
         if(xmlHttp.status !== 200)
@@ -136,7 +142,7 @@ function stopSong(){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/stop");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", );//add here a cookie
     xmlHttp.onerror = HANDLEERROR;
     xmlHttp.onload = ()=>{ 
         if(xmlHttp.status !== 200)
@@ -149,7 +155,7 @@ function findSong(songData, cb){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/list", cb!=null ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     if(cb!=null){
         xmlHttp.onload = ()=>{
             var resp = JSON.parse(xmlHttp.responseText);
@@ -165,7 +171,7 @@ function getHistory(date, site, cb){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/history", cb!=null ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     if(cb!=null){
         xmlHttp.onload = ()=>{
             var resp = JSON.parse(xmlHttp.responseText);
@@ -181,7 +187,7 @@ function suggest(data, cb){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/suggest", cb!=null ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     if(cb!=null){
         xmlHttp.onload = ()=>{
             var resp = JSON.parse(xmlHttp.responseText);
@@ -197,7 +203,7 @@ function getSuggestions(settings, cb){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/suggestions", cb!=null ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     if(cb!=null){
         xmlHttp.onload = ()=>{
             var resp = JSON.parse(xmlHttp.responseText);
@@ -226,10 +232,11 @@ function changePage(to){
         ReactDOM.render(<Login />, document.getElementById('root'));
         return;
     }
-
+    
     getUserData((userData)=>{
         try{
             userData = JSON.parse(userData);
+            console.log(userData)
             ReactDOM.unmountComponentAtNode(document.getElementById('root'));
             if(userData.demo){
                 if(Communicate === 0){
@@ -243,7 +250,7 @@ function changePage(to){
                 return;
             }
             if(!userData.loggedIn){
-                ReactDOM.render(<Login />, document.getElementById('root'));
+                ReactDOM.render(<Login facebook={userData.useFacebook}/>, document.getElementById('root'));
             }else if(userData.isAdmin){
                 ReactDOM.render(<Panel userData={userData}/>, document.getElementById('root'));
             }else{
@@ -263,7 +270,7 @@ function getPlayerData(cb){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/data/", cb!=null ); // false for synchronous request
     xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));
+    xmlHttp.setRequestHeader("x-access-token", loginToken);
 
     if(cb != null)
         xmlHttp.onload = ()=>{ cb(JSON.parse(xmlHttp.responseText)); }
@@ -277,7 +284,7 @@ function getPlaylistData(date, cb){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", adress+"player/getplaylist/", cb!=null);
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));
+    xmlHttp.setRequestHeader("x-access-token", loginToken);
 
     if(cb!=null)
         xmlHttp.onload = ()=>{ cb(JSON.parse(xmlHttp.responseText)) };
@@ -291,7 +298,7 @@ function sendPlaylistData(data){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", adress+"player/playlist/");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));
+    xmlHttp.setRequestHeader("x-access-token", loginToken);
     xmlHttp.send(JSON.stringify({entry: data}));
     return false;
 }
@@ -299,7 +306,7 @@ function sendScheduleData(date){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", adress+"player/schedule/");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     xmlHttp.send(JSON.stringify({schedule: date}));
     return false;
 }
@@ -307,7 +314,7 @@ function sendAmpMode(mode){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", adress+"player/amplifier/");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     xmlHttp.send(JSON.stringify({mode: mode}));
     return false;
 }
@@ -315,36 +322,38 @@ function sendVolume(vol){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", adress+"player/volume/");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     xmlHttp.send(JSON.stringify({volume: vol}));
     return false;
 }
-function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist){
+function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist, callbackLibrary){
     setTimeout(()=>{
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.open( "POST", adress+"notification/");
         xmlHttp.setRequestHeader("Content-Type", "application/json");
-        xmlHttp.setRequestHeader("x-access-token", cookies.get('accessToken'));
+        xmlHttp.setRequestHeader("x-access-token", loginToken);
         xmlHttp.timeout = 30000;
         xmlHttp.onload = function () {
             if(xmlHttp.status !== 200){
                 HANDLEERROR(xmlHttp.responseText);
                 return;
             }
-            notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist);
+            notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist, callbackLibrary);
             try{
                 const res = JSON.parse(xmlHttp.responseText);
-                if(res.msg && res.notID >= actNotID.msg){
+                if(res.msg){
                     callbackMsg(res.msg);
-                    actNotID.msg = res.notID;
                 }
                 if(res.player && res.notID >= actNotID.player){
                     callbackPlayer(res.player);
-                    actNotID.player = res.notID;
+                    actNotID.player = res.notID % 200000008;
                 }
                 if((res.playlist || res.amplifier) && res.notID >= actNotID.playlist){
                     callbackPlaylist(res.playlist, res.amplifier);
-                    actNotID.playlist = res.notID;
+                    actNotID.playlist = res.notID % 200000008;
+                }
+                if(res.newSong){
+                    callbackLibrary(res.newSong);
                 }
             }catch(e){
                 console.error(e);
@@ -353,7 +362,7 @@ function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist){
         xmlHttp.onerror = HANDLEERROR;
         
         xmlHttp.ontimeout = function (e) {
-            notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist);
+            notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist, callbackLibrary);
         };
         xmlHttp.send(JSON.stringify({id:notificationID}));
     }, 0);

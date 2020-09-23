@@ -84,7 +84,7 @@ export const player = Object.assign({}, {
                     
             ytdl.getBasicInfo(data.videoId).then((data)=>{
                 console.log("Finished downloading "+data.videoDetails.title+" to "+song.file);
-                notification.notify({msg: 'Pomyślnie pobrano '+data.videoDetails.title}, true);
+                notification.notify({msg: 'Pomyślnie pobrano '+data.videoDetails.title, newSong: data.videoDetails.title}, true);
                 song.name = data.videoDetails.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                 song.author = data.videoDetails.author.name.replace(/[^\w\s]/gi, '').replace(/'/g, '');
                 song.length = data.videoDetails.lengthSeconds;

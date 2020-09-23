@@ -1,5 +1,5 @@
 export function notFound(req, res, next) {
-    console.log('404', req.originalUrl)
+    console.log('404', req.originalUrl, req.connection.remoteAddress)
     const err = new Error('404 page not found');
     err.status = 404;
     next(err);

@@ -47,6 +47,7 @@ export const notification = Object.assign({}, {
     },
     notify(data, adminOnly){
         data.notID = this.notID++;
+        this.notID %= 200000009;
         for(let id in this.listeners)
             if((adminOnly && this.listeners[id].isAdmin)||!adminOnly)
                 this.sendTo(data, id);

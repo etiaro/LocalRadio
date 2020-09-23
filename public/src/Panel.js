@@ -24,6 +24,7 @@ export default class Panel extends React.Component{
             playerData: {song:{}, amplifierMode:"0" },
             settingsOpen: false,
             actSite: "Library",
+            libUpdater: true,
             actWindow: "",
             volume: 100,
             playlistRef: createRef(),
@@ -52,6 +53,8 @@ export default class Panel extends React.Component{
                 this.state.playlistRef.current.updateData();
             if(data2 && this.state.scheduleRef.current)
                 this.state.scheduleRef.current.updateData();
+        }, (song)=>{
+            this.setState({libUpdater:!this.state.libUpdater})
         });
         getPlayerData((res)=>{
             res.amplifierMode = res.amplifierMode.toString()
@@ -112,13 +115,13 @@ export default class Panel extends React.Component{
         if(this.state.actWindow === "scheduleMenu")
             window = (<ScheduleMenu ref={this.state.scheduleRef} close={()=>{this.closeWindows()}}/>);
         if(this.state.actWindow === "libraryMenu")
-            window = (<Library isWindowed={true} selectCallback={this.state.librarySelectCallback} close={()=>{this.closeWindows()}}/>);
+            window = (<Library libUpdater={this.state.libUpdater} isWindowed={true} selectCallback={this.state.librarySelectCallback} close={()=>{this.closeWindows()}}/>);
 
         return (
             <Router>
                 <Switch>
                     <Route path="/library">
-                        <Library />
+                        <Library libUpdater={this.state.libUpdater}/>
                     </Route>
                     <Route path="/playlist">
                         <Playlist isAdmin={this.state.userData.isAdmin} libraryShow={(cb)=>this.libraryWindowSwitch(cb)} scheduleMenuSwitch={()=>{this.scheduleMenuSwitch()}} ref={this.state.playlistRef}/>

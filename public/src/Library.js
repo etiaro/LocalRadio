@@ -77,7 +77,7 @@ export default function Library(props) {
   const [loading, isLoading] = useState(true);
   const [totalNum, setTotalNum] = useState(-1);
   const isWindowed = props.isWindowed;
- 
+
   useEffect(()=>{
     var isMounted = true;
     findSong({songData:{name: search, site: site}}, (res, totalNum)=>{
@@ -88,7 +88,7 @@ export default function Library(props) {
       }
     });
     return ()=>{isMounted = false;}
-  }, [search, site, totalNum]); //TODO update on new song
+  }, [search, site, totalNum, props.libUpdater]);
 
   function handleSearchChange(event){
     setTotalNum(-1);
@@ -124,7 +124,8 @@ export default function Library(props) {
           <Paper className={classes.searchPaper}>
               <TextField className={classes.TextField} label={"Szukaj"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
           </Paper>
-          <Paper className={classes.root}>
+          <div style={{display:"none"}}>{props.libUpdater}</div>
+          <Paper  className={classes.root}>
             {songs.map(song => (
               <ListItem key={song.ytid} className={classes.item}>
                 <div className={classes.texts}>
@@ -160,6 +161,7 @@ export default function Library(props) {
             <Paper className={classes.searchPaper}>
                 <TextField className={classes.TextField} label={"Szukaj"}  margin="dense" onChange={(e)=>handleSearchChange(e)}/>
             </Paper>
+            <div style={{display:"none"}}>{props.libUpdater}</div>
             <Paper className={classes.root}>
               <List>
                 {songs.map(song => (
