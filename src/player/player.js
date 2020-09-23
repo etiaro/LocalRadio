@@ -93,6 +93,9 @@ export const player = Object.assign({}, {
                 console.log(err);
             });
         });
+        player.YD.on("queueSize", function(size) {
+            console.log(size+" left in queue");
+        });
         player.startPlaylistWatchman();
     },
     playSong(fileName, name, length, ytid){
