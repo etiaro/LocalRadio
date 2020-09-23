@@ -190,9 +190,7 @@ export const player = Object.assign({}, {
                 song.file = makeid(10)+".mp3";
 
             player.YD.download(ytid, song.file);
-        }).catch(e=>{
-            console.log(e);
-        });
+        })
     },
     downloadSongs(ytids){
         if(cfg.demo){
