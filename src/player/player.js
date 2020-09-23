@@ -36,7 +36,7 @@ export const player = Object.assign({}, {
     
     
     YD: new YTmp3({
-        "ffmpegPath": "ffmpeg.exe",        // Where is the FFmpeg binary located?
+        "ffmpegPath": cfg.ffmpegPath,        // Where is the FFmpeg binary located?
         "outputPath": "./Music",    // Where should the downloaded and encoded files be stored?
         "youtubeVideoQuality": "highest",       // What video quality should be used?
         "queueParallelism": 2,                  // How many parallel downloads/encodes should be started?

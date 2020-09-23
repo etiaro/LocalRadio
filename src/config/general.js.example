@@ -3,6 +3,7 @@ export default {
     password: "PASS", //used only for useFacebook=false
     demo: false,
     volumeDevice: 'Speaker',
-    volumeCard: 1
+    volumeCard: 1,
+    ffmpegPath: 'ffmpeg'
 };
   
