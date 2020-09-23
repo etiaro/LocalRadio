@@ -127,7 +127,8 @@ export const database = Object.assign({}, {
     },
     async updateSong(songData){ //TODO UPDATE/REMOVE
       return (await this.queryPromise("INSERT INTO `songs`(`ytid`, `name`, `length`, `author`, `file`) VALUES "+ 
-            "('"+songData.ytid+"','"+songData.name+"','"+songData.length+"','"+songData.author+"','"+songData.file+"') ON DUPLICATE KEY UPDATE")).rows;
+            "('"+songData.ytid+"','"+songData.name+"','"+songData.length+"','"+songData.author+"','"+songData.file+"') ON DUPLICATE KEY UPDATE "+
+            "ytid='"+songData.ytid+"', name='"+songData.name+"', length='"+songData.length+"', author='"+songData.author+"', file='"+songData.file+"'")).rows;
     },
     async findSong(songData){ //TODO better searching!
       var query = "SELECT * FROM `songs` ";

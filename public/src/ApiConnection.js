@@ -142,7 +142,7 @@ function stopSong(){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/stop");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("x-access-token", );//add here a cookie
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     xmlHttp.onerror = HANDLEERROR;
     xmlHttp.onload = ()=>{ 
         if(xmlHttp.status !== 200)
@@ -236,7 +236,6 @@ function changePage(to){
     getUserData((userData)=>{
         try{
             userData = JSON.parse(userData);
-            console.log(userData)
             ReactDOM.unmountComponentAtNode(document.getElementById('root'));
             if(userData.demo){
                 if(Communicate === 0){
