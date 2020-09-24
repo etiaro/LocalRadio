@@ -104,6 +104,10 @@ export const player = Object.assign({}, {
     },
     playSong(fileName, name, length, ytid){
         this.clearLastPlay();
+        player.isPlaying = true;
+        player.startTime = new Date();
+        player.songInfo.name = name;
+        player.songInfo.length = length;
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
         if(!cfg.demo){
             //p.play(FILE, { mplayer: [ '−volume', 100, '-really-quiet' ] }, (er)=>{}
@@ -118,10 +122,6 @@ export const player = Object.assign({}, {
             else
                 throw "playing failed. File not found!";
         }
-        player.startTime = new Date();
-        player.songInfo.name = name;
-        player.songInfo.length = length;
-        player.isPlaying = true;
         player.sendPlayerData();
         database.addHistory({date: new Date(), ytid: ytid});
         player.shuffleTimeout = setTimeout(()=>{
@@ -150,8 +150,11 @@ export const player = Object.assign({}, {
             if(!this.isPlaying)
                 this.sendPlayerData();
         }
-        if(!this.isPlaying)
-            this.nextShuffle();
+        database.getPlaylistData().then((res)=>{
+            if(res.length == 0 || res[0].date*1000 > new Date().getTime())
+                if(!this.isPlaying)
+                    this.nextShuffle();
+        })
     },
     clearLastPlay(){
         if(this.audio){
@@ -239,7 +242,7 @@ export const player = Object.assign({}, {
             database.getPlaylistData().then((res)=>{
                 if(res.length == 0)
                     return;
-                if(res[0].date*1000 < new Date().getTime()){
+                if(res[0].date*1000 <= new Date().getTime()){
                     this.playSong(res[0].file, res[0].name, res[0].length, res[0].ytid);
                     database.modifyPlaylist({id: res[0].id, was: 1});
                 }

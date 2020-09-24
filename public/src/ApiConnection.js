@@ -298,7 +298,7 @@ function sendPlaylistData(data, cb){
     xmlHttp.open("POST", adress+"player/playlist/");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", loginToken);
-    if(cb!==null){
+    if(cb){
         xmlHttp.onload = ()=>{
             cb(JSON.parse(xmlHttp.responseText))
         }
