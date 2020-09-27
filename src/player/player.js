@@ -53,6 +53,7 @@ export const player = Object.assign({}, {
     init(){
         player.YD.on("error", function(error, data) {
             console.log(error, data);
+            player.downloadQ.splice(player.downloadQ.indexOf(data.videoId),1)
             notification.notify({msg: 'Wystąpił problem podczas pobierania'}, true);
         });
         player.YD.on("progress", function(progress) {
@@ -238,7 +239,10 @@ export const player = Object.assign({}, {
     },
     startPlaylistWatchman(){
         amplifier.startWatchman();
+        var Dhelper = new Date();
         setInterval(()=>{
+            if(Dhelper.getDate() !== new Date().getDate())
+                database.fixPlaylistToFitSchedule()
             database.getPlaylistData().then((res)=>{
                 if(res.length == 0)
                     return;

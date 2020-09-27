@@ -251,7 +251,7 @@ export const database = Object.assign({}, {
 
       var r = await this.queryPromise(query);
       if(r.rows[0].length > 0)
-      r.rows[0] = JSON.parse(r.rows[0][0].data)
+        r.rows[0] = JSON.parse(r.rows[0][0].data)
       return r.rows;
     },
     async getPlaylistData(){
@@ -273,7 +273,7 @@ export const database = Object.assign({}, {
           query+= " WHERE id="+entry.id;
           return new Promise(resolve =>{
             this.queryPromise(query).then((r)=>{
-              database.fixPlaylistToFitSchedule()
+              database.fixPlaylistToFitSchedule(entry.date)
               resolve(r.rows)
             })
           })
@@ -285,7 +285,7 @@ export const database = Object.assign({}, {
           query+= " WHERE id="+entry.id;
           return new Promise(resolve =>{
             this.queryPromise(query).then((r)=>{
-              database.fixPlaylistToFitSchedule()
+              database.fixPlaylistToFitSchedule(entry.date)
               resolve(r.rows)
             })
           })
@@ -295,7 +295,7 @@ export const database = Object.assign({}, {
           return new Promise(resolve =>{
             this.queryPromise("INSERT INTO `playlist`(`ytid`, date) VALUES ('"+entry.ytid+"', FROM_UNIXTIME("+entry.date+")) ")
             .then((r)=>{
-              database.fixPlaylistToFitSchedule()
+              database.fixPlaylistToFitSchedule(entry.date)
               resolve(r.rows.affectedRows)
             })
           })
@@ -307,7 +307,7 @@ export const database = Object.assign({}, {
             " AND  (SELECT count(*) FROM history WHERE YEARWEEK(DATE(date), 1) = YEARWEEK(DATE(FROM_UNIXTIME("+entry.date+")), 1) AND ytid='"+entry.ytid+"') + "+
             "(SELECT count(*) FROM playlist WHERE YEARWEEK(DATE(date), 1) = YEARWEEK(DATE(FROM_UNIXTIME("+entry.date+")), 1) AND date > CURRENT_TIMESTAMP AND ytid='"+entry.ytid+"') < "+cfg.maxPerWeek)
               .then((r)=>{
-                database.fixPlaylistToFitSchedule()
+                database.fixPlaylistToFitSchedule(entry.date)
                 resolve(r.rows.affectedRows)
             })
           })
@@ -315,7 +315,7 @@ export const database = Object.assign({}, {
       //date FROM_UNIXTIME('Date.toMiliseconds or smthg')
       //modify or update entry
     },
-    async setAmplifierTimeSchedule(schedule){
+    setAmplifierTimeSchedule(schedule){
       if(typeof schedule === "string")
         schedule = JSON.parse(schedule);
       if(!schedule.day)
@@ -326,7 +326,7 @@ export const database = Object.assign({}, {
       
       return new Promise(resolve =>{
         this.queryPromise("UPDATE `timeSchedule` SET `data`='"+schedule+"';").then(r=>{
-          this.fixPlaylistToFitSchedule();
+          database.fixPlaylistToFitSchedule();
           resolve(r.rows)
         })
       })
@@ -347,9 +347,9 @@ export const database = Object.assign({}, {
         })
       })
     },
-    fixPlaylistToFitSchedule(){
+    fixPlaylistToFitSchedule(date){
       return new Promise((resolve, reject) =>{
-        this.getAllPlaylistData(new Date()).then((playlistD)=>{
+        this.getAllPlaylistData(date || new Date()).then((playlistD)=>{
           var songs = playlistD[1];
           var schedule = playlistD[0].day[new Date().getDay()] ? playlistD[0].enabledTimes : [];
           if(songs.length == 0) return resolve();
