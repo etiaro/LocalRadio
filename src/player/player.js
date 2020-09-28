@@ -9,6 +9,24 @@ import cfg from '../config/general';
 import normalize from 'ffmpeg-normalize';
 
 
+
+
+
+const {chunksToLinesAsync, chomp} = require('@rauschma/stringio');
+
+async function echoReadable(readable) {
+    for await (const line of chunksToLinesAsync(readable)) { // (C)
+      console.log('LINE: '+chomp(line))
+    }
+  }
+
+
+
+
+
+
+
+
 const pl = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
 export default pl;  //singleton stuff, don't care about it
 
@@ -111,17 +129,18 @@ export const player = Object.assign({}, {
         player.songInfo.length = length;
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
         if(!cfg.demo){
-            //p.play(FILE, { mplayer: [ '−volume', 100, '-really-quiet' ] }, (er)=>{}
             if(fs.existsSync('./Music/'+fileName))
-                this.audio = this.p.play('./Music/'+fileName, { mplayer: [ '−volume', 100, '-really-quiet' ] }, function(err){
+                this.audio = this.p.play('./Music/'+fileName, { mplayer: [ '−volume', 100 ] }, function(err){
                     if (err && !err.killed && err !== 1) throw err;
                 });
             else if(fs.existsSync('../Music/'+fileName))
-                this.audio = this.p.play('../Music/'+fileName, { mplayer: [ '−volume', 100, '-really-quiet' ] }, function(err){
+                this.audio = this.p.play('../Music/'+fileName, { mplayer: [ '−volume', 100 ] }, function(err){
                     if (err && !err.killed && err !== 1) throw err;
                 });
             else
                 throw "playing failed. File not found!";
+
+            echoReadable(this.audio.stdout)
         }
         player.sendPlayerData();
         database.addHistory({date: new Date(), ytid: ytid});
