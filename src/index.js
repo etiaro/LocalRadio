@@ -1,3 +1,4 @@
+import "regenerator-runtime/runtime.js";
 import express from 'express';
 import bodyParser from 'body-parser';
 import { notFound, catchErrors } from './middlewares/errors';
@@ -12,7 +13,6 @@ import path from 'path';
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
-import "regenerator-runtime/runtime.js";
 
 database.init(cfg.db,()=>{
     playerController.init();
