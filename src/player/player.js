@@ -108,8 +108,8 @@ export const player = Object.assign({}, {
             ytdl.getBasicInfo(data.videoId).then((data)=>{
                 console.log("Finished downloading "+data.videoDetails.title+" to "+song.file);
                 notification.notify({msg: 'Pomyślnie pobrano '+data.videoDetails.title, newSong: data.videoDetails.title}, true);
-                song.name = data.videoDetails.title.replace(/[^\w\s]/gi, '').replace(/'/g, '');
-                song.author = data.videoDetails.author.name.replace(/[^\w\s]/gi, '').replace(/'/g, '');
+                song.name = data.videoDetails.title;
+                song.author = data.videoDetails.author.name;
                 song.length = data.videoDetails.lengthSeconds;
                 database.updateSong(song);
             }).catch((err)=>{
@@ -139,7 +139,7 @@ export const player = Object.assign({}, {
                 });
             else
                 throw "playing failed. File not found!";
-
+            
             echoReadable(this.audio.stdout)
         }
         player.sendPlayerData();
