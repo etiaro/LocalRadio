@@ -171,7 +171,6 @@ export const database = Object.assign({}, {
       }else{
         query += " ORDER BY `name` LIMIT 30";
       }
-      console.log(mysql.escape(query, inserts), inserts)
       inserts.push.apply(inserts, inserts2)
       var r = await this.queryPromise(query+";"+query2+";", inserts)
       return {result: r.rows[0], totalNum: r.rows[1][0]["COUNT(*)"]};

@@ -50,12 +50,16 @@ export default () => {
                     return res.status(200).send({msg: "query accepted"});
                 });
             else{
-                player.changePlaylist(req.body.entry, req.userInfo.isAdmin).then(done=>{
-                    if(!done)
-                        return res.status(200).send({msg: "query denied", err: "Osiągnięto już limit dzienny/tygodniowy dla tego utworu"});
-                    else
-                        return res.status(200).send({msg: "query accepted"});
-                })
+                if(!req.userInfo.isAdmin && new Date(req.body.entry.date) < new Date()){
+                    return res.status(200).send({msg: "query denied", err: "Nie możesz dodać piosenki w przeszłości"});
+                }else{
+                    player.changePlaylist(req.body.entry, req.userInfo.isAdmin).then(done=>{
+                        if(!done)
+                            return res.status(200).send({msg: "query denied", err: "Osiągnięto już limit dzienny/tygodniowy dla tego utworu"});
+                        else
+                            return res.status(200).send({msg: "query accepted"});
+                    })
+                }
             }
         }else
             return res.status(500).send({msg:"no entry entered"})
