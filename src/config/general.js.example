@@ -6,6 +6,7 @@ export default {
     volumeCard: 1,
     ffmpegPath: 'ffmpeg',
     maxPerWeek: 3,
-    maxPerDay: 1
+    maxPerDay: 1,
+    daysInFuture: 5
 };
   
