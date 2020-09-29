@@ -20,6 +20,7 @@ database.init(cfg.db,()=>{
 
 const app = express();
 
+
 app.set('secretKey', 'K4UgOiCggY');
 app.use(cors());
 
@@ -41,6 +42,7 @@ app.use('/password', express.static(path.join(__dirname, '../public/build/')));
 
 // errors handling
 app.use(notFound);
+app.use(catchErrors);
 
 // Start
 var httpServ = http.createServer(app);
