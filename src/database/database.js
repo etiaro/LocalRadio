@@ -215,9 +215,9 @@ export const database = Object.assign({}, {
       if(sData && sData.id && sData.status){
         query = "UPDATE suggestions SET status=? WHERE id=?;";
         inserts.push(sData.status, sData.id)
-      }else if(sData.url && sData.userId){
-        query = "INSERT INTO suggestions (url, userId, status) VALUES(?, ?, 0);"
-        inserts.push(sData.url, sData.userId)
+      }else if(sData.url && sData.userId && sData.ytid){
+        query = "INSERT IGNORE INTO suggestions (url, userId, status, ytid) VALUES(?, ?, 0, ?);"
+        inserts.push(sData.url, sData.userId, sData.ytid)
       }
       if(!sData || query===""){
         return {err:"Wrong suggestion data"};

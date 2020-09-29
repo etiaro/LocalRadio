@@ -14,6 +14,7 @@ import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import { styled } from '@material-ui/core/styles';
 import {Close as CloseIcon, Check as CheckIcon} from '@material-ui/icons';
+import getYouTubeID from 'get-youtube-id';
 
 
 import {getSuggestions, suggest} from './ApiConnection';
@@ -43,7 +44,8 @@ const useStyles = makeStyles(theme => ({
     padding: 10,
     textAlign: "left",
     position: "relative",
-    minHeight: "3.7em"
+    minHeight: "3.7em",
+    minWidth: "30vw"
   },
   url:{
       fontSize: '1em'
@@ -197,6 +199,9 @@ export default function Suggestions(props) {
                     /> 
                     Odrzucone</p>
                   </Paper>);
+  
+  for(var i = 0; i < suggests.length; i++)
+      if(!suggests[i].ytid ) suggests[i].ytid = "OLD_SUG";
   return (
     <div className="Suggestions" onScroll={(e)=>handleScroll(e)}>
         {searchMenu}
@@ -206,7 +211,7 @@ export default function Suggestions(props) {
               <ListItem className={classes.item} style={{backgroundColor:getSugColor(sug)}}>
                 <div className={classes.texts}>
                   <Typography variant="h5" component="h3" className={classes.url}>
-                    <a href={sug.url} target="_blank" rel="noopener noreferrer">{sug.url}</a>
+                    <a href={sug.url} target="_blank" rel="noopener noreferrer">{sug.ytid}</a>
                   </Typography>
                   {sug.status!==1 && props.isAdmin ? (<span>
                     <IconButton onClick={() => accept(sug)}>
@@ -234,6 +239,7 @@ export class Suggest extends React.Component {
       super(props);
       this.state={
           url: "",
+          ytid: "",
           btnDisabled: true,
           tab: 0
       }
@@ -243,13 +249,14 @@ export class Suggest extends React.Component {
   handleURLChange(e) {
       var val = e.target.value;
       var btnDisabled = true;
-      if((val.includes("v=") && val.includes("https://")) || val.includes("https://youtu.be/"))
+      console.log()
+      if(getYouTubeID(val) !== null)
         btnDisabled = false;
-      this.setState({url: val, btnDisabled: btnDisabled});
+      this.setState({url: val, ytid: getYouTubeID(val), btnDisabled: btnDisabled});
   }
   suggestCall() {
-      suggest({userId: this.props.userId, url: this.state.url}, ()=>{});
-      this.setState({url: ""});
+      suggest({userId: this.props.userId, url: this.state.url, ytid: this.state.ytid}, ()=>{});
+      this.setState({url: "", ytid: ""});
       this.props.close();
   }
   handleChange(event, newValue) {
