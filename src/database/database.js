@@ -322,12 +322,23 @@ export const database = Object.assign({}, {
           })
         }else{
           var query = "UPDATE playlist SET";
-          query += " ytid=?";
-          query += " date=?";
-          query += " was=?";
+	  var inserts = [];
+	  if(entry.ytid){
+	      query += " ytid=?";
+	      inserts.push(entry.ytid)
+	  }
+	  if(entry.date){
+	      query += " date=?";
+	      inserts.push(entry.date)
+	  }
+	  if(entry.was){
+	      query += " was=?";
+	      inserts.push(entry.was)
+	  }
           query+= " WHERE id=?";
+	  inserts.push(entry.id)
           return new Promise(resolve =>{
-            this.queryPromise(query, [entry.ytid || "", entry.date || "", entry.was || "", , entry.id]).then((r)=>{
+            this.queryPromise(query, inserts).then((r)=>{
               database.fixPlaylistToFitSchedule(entry.date)
               resolve(r.rows)
             })
