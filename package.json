@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf ./dist && babel ./src -d ./dist && node copy.js && npm run -s buildPublic",
+    "build": "rimraf ./dist && babel ./src -d ./dist --copy-files && npm run -s buildPublic",
     "buildPublic": "cd public && npm run build",
     "prestart": "npm run -s build",
     "start": "node dist/index.js",
