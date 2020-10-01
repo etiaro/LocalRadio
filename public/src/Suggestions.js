@@ -57,7 +57,7 @@ const useStyles = makeStyles(theme => ({
       fontSize: '1em',
       textDecoration: 'none'
   },
-  subs:{
+  views:{
       fontSize: '0.9em',
       color: 'GRAY'
   },
@@ -225,8 +225,8 @@ export default function Suggestions(props) {
                   <Typography variant="h5" component="h3" className={classes.url}>
           <a className={classes.url} href={sug.url} target="_blank" rel="noopener noreferrer">{sug.NAME} ({sug.ytid})</a>
                   </Typography>
-                  <Typography component="p" className={classes.subs}>
-                    {format(sug.subs)} subs
+                  <Typography component="p" className={classes.views}>
+                    {format(sug.views)} views
                   </Typography>
                   {sug.status!==1 && props.isAdmin ? (<span>
                     <IconButton onClick={() => accept(sug)}>

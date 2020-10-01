@@ -73,19 +73,19 @@ export const database = Object.assign({}, {
       
       if(r.rows.length == 0){
         console.log("Users table not found, creating...");
-        await this.queryPromise("CREATE TABLE `?`.`users` ( `id` VARCHAR(30) NOT NULL , `name` VARCHAR(30) NOT NULL , `mail` VARCHAR(60) NOT NULL , `picture` VARCHAR(150) NOT NULL , `isAdmin` BOOLEAN NOT NULL  DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",[cfg.database], true)
+        await this.queryPromise("CREATE TABLE `users` ( `id` VARCHAR(30) NOT NULL , `name` VARCHAR(30) NOT NULL , `mail` VARCHAR(60) NOT NULL , `picture` VARCHAR(150) NOT NULL , `isAdmin` BOOLEAN NOT NULL  DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",[cfg.database], true)
         console.log('Created table users');
       }
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'songs' LIMIT 1;",[cfg.database], true)
       if(r.rows.length == 0){
         console.log("Songs table not found, creating...");
-        await this.queryPromise("CREATE TABLE `?`.`songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(30) NOT NULL , `file` VARCHAR(30) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;",[cfg.database], true)
+        await this.queryPromise("CREATE TABLE `songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(30) NOT NULL , `file` VARCHAR(30) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;",[cfg.database], true)
         console.log('Created table songs');
       }
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'timeSchedule' LIMIT 1;",[cfg.database], true)
       if(r.rows.length == 0){
         console.log("TimeSchedule table not found, creating..."); 
-        await this.queryPromise("CREATE TABLE `?`.`timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, `amplifierMode` INT NOT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB;", [],true)
+        await this.queryPromise("CREATE TABLE `timeSchedule` ( `id` INT NOT NULL AUTO_INCREMENT , `data` TEXT NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, `amplifierMode` INT NOT NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB;", [],true)
         console.log('Created table timeSchedule');
         await this.queryPromise("INSERT INTO `timeSchedule` (`data`, `date`, `amplifierMode`) VALUES ('{\"enabledTimes\":[],\"day\":[false,false,false,false,false,false,false]}', '2020-01-01 01:00:00', 0);",[cfg.database],true)
         console.log('Inserted default time schedule');
@@ -93,19 +93,19 @@ export const database = Object.assign({}, {
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'playlist' LIMIT 1;",[cfg.database],true)
       if(r.rows.length == 0){
         console.log("Playlist table not found, creating..."); 
-        await this.queryPromise("CREATE TABLE `?`.`playlist` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, `was` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",[cfg.database],true)
+        await this.queryPromise("CREATE TABLE `playlist` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, `was` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (`id`)) ENGINE = InnoDB;",[cfg.database],true)
         console.log('Created table playlist'); 
       }
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'history' LIMIT 1;",[cfg.database],true)
       if(r.rows.length == 0){
         console.log("History table not found, creating..."); 
-        await this.queryPromise("CREATE TABLE `?`.`history` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;",[cfg.database],true)
+        await this.queryPromise("CREATE TABLE `history` ( `id` INT NOT NULL AUTO_INCREMENT , `ytid` VARCHAR(30) NOT NULL , `date` TIMESTAMP NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;",[cfg.database],true)
         console.log('Created table history'); 
       }
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'suggestions' LIMIT 1;",[cfg.database],true)
       if(r.rows.length == 0){
         console.log("Suggestions table not found, creating..."); 
-        await this.queryPromise("CREATE TABLE `?`.`suggestions` ( `id` INT NOT NULL AUTO_INCREMENT , `url` TEXT NOT NULL , `userId` VARCHAR(30) NOT NULL , `status` TINYINT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;",[cfg.database],true)
+        await this.queryPromise("CREATE TABLE `suggestions` ( `id` int(11) NOT NULL AUTO_INCREMENT, `url` text NOT NULL, `ytid` varchar(150) DEFAULT NULL, `name` text NOT NULL, `views` int(11) NOT NULL, `userId` varchar(150) NOT NULL, `status` tinyint(4) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `ytid` (`ytid`) ) ENGINE=InnoDB;",[cfg.database],true)
         console.log('Created table suggestions'); 
       }
       await this.fixPlaylistToFitSchedule();
@@ -218,7 +218,7 @@ export const database = Object.assign({}, {
         inserts.push(sData.status, sData.id)
       }else if(sData.url && sData.userId && sData.ytid){
         var info = await ytcore.getBasicInfo(sData.ytid)
-        query = "INSERT IGNORE INTO suggestions (url, userId, status, ytid, name, subs) VALUES(?, ?, 0, ?, ?, ?);"
+        query = "INSERT IGNORE INTO suggestions (url, userId, status, ytid, name, views) VALUES(?, ?, 0, ?, ?, ?);"
         inserts.push(sData.url, sData.userId, sData.ytid, info.videoDetails.title, info.videoDetails.viewCount)
       }
       if(!sData || query===""){

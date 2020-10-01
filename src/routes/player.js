@@ -23,9 +23,12 @@ export default () => {
         });
     });
     api.post('/suggest', checkLogged, (req, res, next) => {
-        if(req.body.data && req.body.data.id && !req.userInfo.isAdmin) res.status(500).send({msg:"you need to be an admin", err:response.err});
+        if(req.body.data && req.body.data.id && !req.userInfo.isAdmin) 
+            return res.status(500).send({msg:"you need to be an admin", err:response.err});
         
         req.body.data.userId = req.userInfo.id;
+        if(!getYouTubeID(req.body.data.url))
+            return res.status(500).send({msg:"Wrong url", err:response.err});
         database.updateSuggestion(req.body.data).then((response)=>{
             if(response.err)
                 res.status(500).send({msg:"wrong query", err:response.err});
