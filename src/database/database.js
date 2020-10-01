@@ -2,6 +2,7 @@ import mysql from 'mysql';
 import moment from 'moment';
 import { player } from '../player/player';
 import cfg from '../config/general';
+import ytcore from 'ytdl-core';
 
 const db = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
 export default db;  //singleton stuff, don't care about it
@@ -216,8 +217,9 @@ export const database = Object.assign({}, {
         query = "UPDATE suggestions SET status=? WHERE id=?;";
         inserts.push(sData.status, sData.id)
       }else if(sData.url && sData.userId && sData.ytid){
-        query = "INSERT IGNORE INTO suggestions (url, userId, status, ytid) VALUES(?, ?, 0, ?);"
-        inserts.push(sData.url, sData.userId, sData.ytid)
+        var info = await ytcore.getBasicInfo(sData.ytid)
+        query = "INSERT IGNORE INTO suggestions (url, userId, status, ytid, name, subs) VALUES(?, ?, 0, ?, ?, ?);"
+        inserts.push(sData.url, sData.userId, sData.ytid, info.videoDetails.title, info.videoDetails.viewCount)
       }
       if(!sData || query===""){
         return {err:"Wrong suggestion data"};
@@ -228,7 +230,7 @@ export const database = Object.assign({}, {
       if(!sData || !(sData.waiting || sData.accepted || sData.denied)){
         return {result: [], totalNum: 0};
       }
-      var query = "SELECT *, suggestions.id as id FROM suggestions INNER JOIN users ON users.id=suggestions.userId WHERE ";
+      var query = "SELECT *, suggestions.name as NAME, suggestions.id as id FROM suggestions INNER JOIN users ON users.id=suggestions.userId WHERE ";
       var query2 = "SELECT COUNT(*) FROM suggestions INNER JOIN users ON users.id=suggestions.userId WHERE ";
       var inserts = [];
       var inserts2 = [];

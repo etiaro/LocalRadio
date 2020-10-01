@@ -19,6 +19,12 @@ import getYouTubeID from 'get-youtube-id';
 
 import {getSuggestions, suggest} from './ApiConnection';
 
+function format(x) {
+  var parts = x.toString().split(".");
+  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  return parts.join(",");
+  }
+
 
 
 const UrlInput = styled(TextField)({
@@ -48,7 +54,12 @@ const useStyles = makeStyles(theme => ({
     minWidth: "30vw"
   },
   url:{
-      fontSize: '1em'
+      fontSize: '1em',
+      textDecoration: 'none'
+  },
+  subs:{
+      fontSize: '0.9em',
+      color: 'GRAY'
   },
   author:{
       fontSize: '0.8em',
@@ -200,8 +211,9 @@ export default function Suggestions(props) {
                     Odrzucone</p>
                   </Paper>);
   
-  for(var i = 0; i < suggests.length; i++)
+  for(var i = 0; i < suggests.length; i++){
       if(!suggests[i].ytid ) suggests[i].ytid = "OLD_SUG";
+  }
   return (
     <div className="Suggestions" onScroll={(e)=>handleScroll(e)}>
         {searchMenu}
@@ -211,7 +223,10 @@ export default function Suggestions(props) {
               <ListItem className={classes.item} style={{backgroundColor:getSugColor(sug)}}>
                 <div className={classes.texts}>
                   <Typography variant="h5" component="h3" className={classes.url}>
-                    <a href={sug.url} target="_blank" rel="noopener noreferrer">{sug.ytid}</a>
+          <a className={classes.url} href={sug.url} target="_blank" rel="noopener noreferrer">{sug.NAME} ({sug.ytid})</a>
+                  </Typography>
+                  <Typography component="p" className={classes.subs}>
+                    {format(sug.subs)} subs
                   </Typography>
                   {sug.status!==1 && props.isAdmin ? (<span>
                     <IconButton onClick={() => accept(sug)}>
