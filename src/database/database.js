@@ -3,6 +3,7 @@ import moment from 'moment';
 import { player } from '../player/player';
 import cfg from '../config/general';
 import ytcore from 'ytdl-core';
+import getYouTubeID from 'get-youtube-id';
 
 const db = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod';},_type: 'NoClassSingleton', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
 export default db;  //singleton stuff, don't care about it
@@ -216,7 +217,7 @@ export const database = Object.assign({}, {
       if(sData && sData.id && sData.status){
         query = "UPDATE suggestions SET status=? WHERE id=?;";
         inserts.push(sData.status, sData.id)
-      }else if(sData.url && sData.userId && sData.ytid){
+      }else if(sData.url && sData.userId && sData.ytid && !!getYouTubeID(sData.url)){
         var info = await ytcore.getBasicInfo(sData.ytid)
         query = "INSERT IGNORE INTO suggestions (url, userId, status, ytid, name, views) VALUES(?, ?, 0, ?, ?, ?);"
         inserts.push(sData.url, sData.userId, sData.ytid, info.videoDetails.title, info.videoDetails.viewCount)
