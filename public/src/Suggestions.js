@@ -139,12 +139,15 @@ export default function Suggestions(props) {
       setChanged(changed+1);
     });
   }
+  function getURL(ytid){
+    return "https://youtu.be/"+ytid;
+  }
   function accept(song){
     props.openAddMenu(()=>{
       suggest({id: song.id, status:1}, ()=>{
         setChanged(changed+1);
       });
-    }, song.url);
+    }, getURL(song.ytid));
   }
 
   var LoadingWheel = suggests && suggests.length !== totalNum ?(<CircularProgress className={classes.loadingWheel}/>):null;
@@ -213,6 +216,7 @@ export default function Suggestions(props) {
   
   for(var i = 0; i < suggests.length; i++){
       if(!suggests[i].ytid ) suggests[i].ytid = "OLD_SUG";
+      suggests[i].url = getURL(suggests[i].ytid)
   }
   return (
     <div className="Suggestions" onScroll={(e)=>handleScroll(e)}>
@@ -253,7 +257,6 @@ export class Suggest extends React.Component {
   constructor(props){
       super(props);
       this.state={
-          url: "",
           ytid: "",
           btnDisabled: true,
           tab: 0
@@ -267,10 +270,10 @@ export class Suggest extends React.Component {
       console.log()
       if(getYouTubeID(val) !== null)
         btnDisabled = false;
-      this.setState({url: val, ytid: getYouTubeID(val), btnDisabled: btnDisabled});
+      this.setState({ytid: getYouTubeID(val), btnDisabled: btnDisabled});
   }
   suggestCall() {
-      suggest({userId: this.props.userId, url: this.state.url, ytid: this.state.ytid}, ()=>{});
+      suggest({userId: this.props.userId, ytid: this.state.ytid}, ()=>{});
       this.setState({url: "", ytid: ""});
       this.props.close();
   }
@@ -289,7 +292,7 @@ export class Suggest extends React.Component {
               <Tabs value={this.state.tab} onChange={(e, n)=>this.handleChange(e, n)} aria-label="download method tabs">
                   <Tab label="Youtube" id="YT" aria-controls="youtube-tab" />
               </Tabs>
-              <UrlInput label={"URL"}  margin="dense" onChange={(e)=>this.handleURLChange(e)} value={this.state.url} />
+              <UrlInput label={"URL"}  margin="dense" onChange={(e)=>this.handleURLChange(e)} />
               <p>Podaj adres URL utworu z serwisu YouTube</p>
               <Button disabled={this.state.btnDisabled} variant="contained" color="primary" onClick={() => { this.suggestCall(); }}>
                   Sugeruj

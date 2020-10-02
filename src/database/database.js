@@ -106,7 +106,7 @@ export const database = Object.assign({}, {
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'suggestions' LIMIT 1;",[cfg.database],true)
       if(r.rows.length == 0){
         console.log("Suggestions table not found, creating..."); 
-        await this.queryPromise("CREATE TABLE `suggestions` ( `id` int(11) NOT NULL AUTO_INCREMENT, `url` text NOT NULL, `ytid` varchar(150) DEFAULT NULL, `name` text NOT NULL, `views` int(11) NOT NULL, `userId` varchar(150) NOT NULL, `status` tinyint(4) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `ytid` (`ytid`) ) ENGINE=InnoDB;",[cfg.database],true)
+        await this.queryPromise("CREATE TABLE `suggestions` ( `id` int(11) NOT NULL AUTO_INCREMENT, `ytid` varchar(150) DEFAULT NULL, `name` text NOT NULL, `views` int(11) NOT NULL, `userId` varchar(150) NOT NULL, `status` tinyint(4) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `ytid` (`ytid`) ) ENGINE=InnoDB;",[cfg.database],true)
         console.log('Created table suggestions'); 
       }
       await this.fixPlaylistToFitSchedule();
@@ -217,10 +217,10 @@ export const database = Object.assign({}, {
       if(sData && sData.id && sData.status){
         query = "UPDATE suggestions SET status=? WHERE id=?;";
         inserts.push(sData.status, sData.id)
-      }else if(sData.url && sData.userId && sData.ytid && !!getYouTubeID(sData.url) && sData.ytid === getYouTubeID(sData.url)){
+      }else if(sData.url && sData.userId && sData.ytid){
         var info = await ytcore.getBasicInfo(sData.ytid)
-        query = "INSERT IGNORE INTO suggestions (url, userId, status, ytid, name, views) VALUES(?, ?, 0, ?, ?, ?);"
-        inserts.push(sData.url, sData.userId, sData.ytid, info.videoDetails.title, info.videoDetails.viewCount)
+        query = "INSERT IGNORE INTO suggestions (userId, status, ytid, name, views) VALUES(?, 0, ?, ?, ?);"
+        inserts.push(sData.userId, sData.ytid, info.videoDetails.title, info.videoDetails.viewCount)
       }
       if(!sData || query===""){
         return {err:"Wrong suggestion data"};
