@@ -411,7 +411,7 @@ export const database = Object.assign({}, {
       if(!date) date = new Date();
 
       return new Promise((resolve, reject) =>{
-        this.getAllPlaylistData(date || new Date()).then((playlistD)=>{
+        this.getAllPlaylistData(date).then((playlistD)=>{
           var songs = playlistD[1];
           var schedule = playlistD[0].day[new Date(date).getDay()] ? playlistD[0].enabledTimes : [];
           if(songs.length == 0) return resolve();
