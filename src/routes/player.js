@@ -54,7 +54,7 @@ export default () => {
             else{
                 if(!req.userInfo.isAdmin && new Date(req.body.entry.date) < new Date()){
                     return res.status(200).send({msg: "query denied", err: "Nie możesz dodać piosenki w przeszłości"});
-                }else if(new Date(req.body.entry.date) - new Date() > (cfg.daysInFuture*1000*60*60*24))
+                }else if(!req.userInfo.isAdmin && new Date(req.body.entry.date) - new Date() > (cfg.daysInFuture*1000*60*60*24))
                     return res.status(200).send({msg: "query denied", err: "Nie możesz edytować playlisty dalej niż 5 dni od teraz"});
                 else{
                     player.changePlaylist(req.body.entry, req.userInfo.isAdmin).then(done=>{

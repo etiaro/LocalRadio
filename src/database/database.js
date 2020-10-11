@@ -406,10 +406,13 @@ export const database = Object.assign({}, {
       })
     },
     fixPlaylistToFitSchedule(date){
+      if(typeof(date) === "number") date = new Date(date * 1000);
+      if(typeof(date) === "string") date = new Date(date);
+
       return new Promise((resolve, reject) =>{
         this.getAllPlaylistData(date || new Date()).then((playlistD)=>{
           var songs = playlistD[1];
-          var schedule = playlistD[0].day[new Date().getDay()] ? playlistD[0].enabledTimes : [];
+          var schedule = playlistD[0].day[new Date(date).getDay()] ? playlistD[0].enabledTimes : [];
           if(songs.length == 0) return resolve();
           var beginning = new Date(songs[0].date*1000);
           var songInd = 0;
