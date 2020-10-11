@@ -408,6 +408,7 @@ export const database = Object.assign({}, {
     fixPlaylistToFitSchedule(date){
       if(typeof(date) === "number") date = new Date(date * 1000);
       if(typeof(date) === "string") date = new Date(date);
+      if(!date) date = new Date();
 
       return new Promise((resolve, reject) =>{
         this.getAllPlaylistData(date || new Date()).then((playlistD)=>{
