@@ -1,5 +1,6 @@
 export default {
     useFacebook: false,
+    secret: "SECRET-JWT",
     password: "PASS", //used only for useFacebook=false
     demo: false,
     volumeDevice: 'Speaker',

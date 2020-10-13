@@ -6,6 +6,7 @@ import login from "./routes/login";
 import player from "./routes/player";
 import notification from './routes/notification';
 import cfg from './config/database';
+import gCfg from './config/database';
 import {database} from './database/database';
 import {player as playerController} from './player/player';
 import cors from 'cors';
@@ -21,7 +22,7 @@ database.init(cfg.db,()=>{
 const app = express();
 
 
-app.set('secretKey', 'K4UgOiCggY');
+app.set('secretKey', gCfg.secret);
 app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: false }));
