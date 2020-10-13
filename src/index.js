@@ -46,7 +46,7 @@ app.use(catchErrors);
 
 // Start
 var httpServ = http.createServer(app);
-httpServ.listen(80);
+httpServ.listen(8080);
 
 var privateKey  = fs.readFileSync(path.join(__dirname, '/alice.key'), 'utf8');
 var certificate  = fs.readFileSync(path.join(__dirname, '/alice.crt'), 'utf8');
