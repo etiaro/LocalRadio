@@ -278,6 +278,7 @@ export const database = Object.assign({}, {
       if(date){
         if(typeof(date) === "number") date = new Date(date * 1000);
         if(typeof(date) === "string") date = new Date(date);
+        if(!date || isNaN(date)) date = new Date();
         date.setHours(0,0,0,0);
         var dateTo = new Date(date);
         dateTo.setHours(23,59,59,999);
@@ -408,7 +409,7 @@ export const database = Object.assign({}, {
     fixPlaylistToFitSchedule(date){
       if(typeof(date) === "number") date = new Date(date * 1000);
       if(typeof(date) === "string") date = new Date(date);
-      if(!date) date = new Date();
+      if(!date || isNaN(date)) date = new Date();
 
       return new Promise((resolve, reject) =>{
         this.getAllPlaylistData(date).then((playlistD)=>{

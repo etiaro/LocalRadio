@@ -220,7 +220,7 @@ export const player = Object.assign({}, {
         notification.notify({player: this.getInfo()});
     },
     sendPlaylistData(){
-        database.getAllPlaylistData(null).then((data)=>{
+        database.getAllPlaylistData().then((data)=>{
             notification.notify({amplifier: data[0], playlist: data[1]});
         });
     },
