@@ -172,9 +172,10 @@ export const player = Object.assign({}, {
         this.isPlaying = false;
         if(!leaveSuffle)
             this.isShuffle = false;
-        if(tmp)
+        if(tmp){
             console.log("stopped playing")
             this.sendPlayerData();
+        }
     },
     downloadSong(ytid){
         if(cfg.demo){
