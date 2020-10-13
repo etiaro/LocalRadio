@@ -99,6 +99,15 @@ export default class Login extends React.Component{
     }
 }
 
+export function Progress(props){
+    return (
+        <Container id="Cont">
+            <Paper id="Paper" elevation={2} square={true}>
+                <CircularProgress/>
+            </Paper>
+        </Container>
+    )
+}
 
 const useStyles = makeStyles(theme => ({
     homeMenu:{

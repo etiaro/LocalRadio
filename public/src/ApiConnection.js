@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Panel from './Panel';
 import UserHome from './UserHome';
-import Login, {DemoAlert, DemoLogin} from './Login';
+import Login, {DemoAlert, DemoLogin, Progress} from './Login';
 import Cookies from 'universal-cookie';
 import crypto from 'crypto-js';
 
@@ -217,6 +217,7 @@ function getSuggestions(settings, cb){
 }
 var Communicate = 0;
 function changePage(to){
+    ReactDOM.render(<Progress />, document.getElementById('root'));
     if(process.env.REACT_APP_DEMO){
         if(Communicate === 0){
             Communicate = 1;
