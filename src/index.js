@@ -6,7 +6,7 @@ import login from "./routes/login";
 import player from "./routes/player";
 import notification from './routes/notification';
 import cfg from './config/database';
-import gCfg from './config/database';
+import gCfg from './config/general';
 import {database} from './database/database';
 import {player as playerController} from './player/player';
 import cors from 'cors';
