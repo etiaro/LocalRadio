@@ -2,6 +2,11 @@ body{
     background-image: url('Loginbg.jpg');
     background-size: 100vw 100vh;
 }
+@media only screen and (max-width: 640px) {
+    body{
+        background: none;
+    }
+}
 
 #Cont{
     position: absolute;
