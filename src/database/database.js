@@ -428,11 +428,13 @@ export const database = Object.assign({}, {
             }
             if(actSchInd == schedule.length){ 
               var timestamp = Math.floor(beginning.getTime()/1000);
-              return this.queryPromise("DELETE FROM playlist WHERE DATE(date)=DATE(FROM_UNIXTIME(?)) AND date>=FROM_UNIXTIME(?);", [timestamp, timestamp])
-                      .catch((e)=>reject(e)).then(()=>{
-                        player.sendPlaylistData();
-                        resolve()
-                      })
+              this.queryPromise("DELETE FROM playlist WHERE id=?;", [songs[songInd].id])
+                .catch((e)=>reject(e)).then((r)=>{
+                  player.sendPlaylistData(r);
+                  resolve();
+              })
+              songInd++;
+              continue;
             }
             var tmpDate = new Date(beginning.getFullYear(),beginning.getMonth(), beginning.getDate(), schedule[actSchInd].begin.hour, schedule[actSchInd].begin.minutes)
             beginning = new Date(Math.max(tmpDate, beginning));

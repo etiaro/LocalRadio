@@ -229,12 +229,12 @@ class Playlist extends React.Component{
         }
         song.addBtn = "";
         const e = this.countEndTime(song.date, song.length, actE);
-        e.hour = e.getHours(); e.minutes = e.getMinutes();
+        e.hour = e.getHours(); e.minutes = e.getMinutes(); e.seconds = e.getSeconds();
         if(e.hour < actE.hour || (e.hour===actE.hour && e.minutes < actE.minutes))
           if(ind+1 < playlist.length){
             var b2 = new Date(playlist[ind+1].date*1000);
-            b2.hour = b2.getHours(); b2.minutes = b2.getMinutes();
-            if(b2.hour > e.hour || (b2.hour===e.hour && b2.minutes > e.minutes))
+            b2.hour = b2.getHours(); b2.minutes = b2.getMinutes(); b2.seconds = b2.getSeconds();
+            if(b2.hour > e.hour || (b2.hour===e.hour && b2.minutes > e.minutes) || (b2.hour===e.hour && b2.minutes===e.minutes && b2.seconds > e.seconds))
               song.addBtn = (<IconButton onClick={()=>{this.addClick(e)}}>
                               <AddCircle/>
                             </IconButton>);
