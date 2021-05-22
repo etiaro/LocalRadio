@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import {database} from '../database/database';
-import {notification} from "../player/notification";
 import {player} from '../player/player';
 import {checkLogged, checkAdmin} from './login';
 import getYouTubeID from 'get-youtube-id';
-import ytList from "youtube-playlist";
+import { scrapePlaylist } from "youtube-playlist-scraper";
 import { amplifier } from '../player/amplifier';
 import cfg from '../config/general'
 
@@ -104,10 +103,13 @@ export default () => {
     api.post('/download', checkAdmin, (req, res, next) => {
         if(req.body.url){
             if(req.body.url.includes("playlist")){
+                let id = req.body.url.match(/[&?]list=([^&]+)/i);
+                if(id.length < 2)
+                    return res.status(500).send({msg: "Query denied. Can't find playlist id!"});
                 res.status(200).send({msg: "query accepted"});
-                ytList(req.body.url, 'id').then(result => {
-                    var playlist = result.data.playlist;
-                    player.downloadSongs(playlist);
+                scrapePlaylist(id[1]).then(data => {
+                    var playlist = data.playlist;
+                    player.downloadSongs(playlist.map(s=>s.id));
                   });
                 return;
             }else{
