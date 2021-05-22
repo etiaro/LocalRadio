@@ -71,8 +71,7 @@ export const amplifier = Object.assign({}, {
                         const now = new Date();
                         if(!res.data.day[now.getDay()]){
                             port.write('-');
-                            if(lastMode !== '-')
-                                player.stopPlaying(true);
+                            player.stopPlaying(true);
                             lastMode = '-';
                             return;
                         }
