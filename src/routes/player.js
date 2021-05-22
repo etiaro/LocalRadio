@@ -100,6 +100,12 @@ export default () => {
         player.stopPlaying();
         return res.status(200).send({msg: "query accepted"});
     });
+    api.post('/delete', checkAdmin, (req, res)=>{
+        if(!req.body.ytid)
+            return res.status(500).send({msg: "Query denied. Give ytid!"});
+        player.deleteSong(req.body.ytid);
+        return res.status(200).send({msg: "query accepted"});
+    })
     api.post('/download', checkAdmin, (req, res, next) => {
         if(req.body.url){
             if(req.body.url.includes("playlist")){

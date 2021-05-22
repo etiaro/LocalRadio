@@ -109,6 +109,7 @@ export const player = Object.assign({}, {
         player.startTime = new Date();
         player.songInfo.name = name;
         player.songInfo.length = length;
+        player.songInfo.ytid = ytid;
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
         if(!cfg.demo){
             if(fs.existsSync('./Music/'+fileName))
@@ -176,6 +177,19 @@ export const player = Object.assign({}, {
             console.log("stopped playing")
             this.sendPlayerData();
         }
+    },
+    deleteSong(ytid){
+        if(ytid == this.songInfo.ytid)
+            this.stopPlaying(true);
+        database.deleteSong(ytid).then((res)=>{
+            try{
+                fs.unlinkSync('./Music/'+res.file);
+                notification.notify({msg: 'Usunięto '+res.name, deletedSong: res.name}, true);
+            }catch(err){
+                console.log(err);
+                notification.notify({msg: 'Usunięto '+res.name+' z bazy danych, jednak nie udało się usunąć pliku mp3', deletedSong: res.name}, true);
+            }
+        });
     },
     downloadSong(ytid){
         if(cfg.demo){

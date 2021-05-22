@@ -131,7 +131,10 @@ export const database = Object.assign({}, {
       return (await this.queryPromise("SET @id= (SELECT IFNULL((SELECT a.ytid FROM (SELECT ytid FROM ( SELECT COUNT(*) AS a, ytid FROM history WHERE YEARWEEK(DATE(date))=YEARWEEK(CURRENT_DATE) GROUP BY ytid UNION SELECT COUNT(*) as a, ytid FROM playlist WHERE YEARWEEK(DATE(date))=YEARWEEK(CURRENT_DATE) GROUP BY ytid UNION SELECT 0 as a, ytid FROM songs GROUP BY ytid )tbl GROUP BY ytid HAVING SUM(tbl.a) < ?)a INNER JOIN (SELECT SUM(tbl.a) as s, ytid FROM ( SELECT COUNT(*) AS a, ytid FROM history WHERE DATE(date)=CURRENT_DATE GROUP BY ytid UNION SELECT COUNT(*) as a, ytid FROM playlist WHERE DATE(date)=CURRENT_DATE GROUP BY ytid UNION SELECT 0 as a, ytid FROM songs GROUP BY ytid )tbl GROUP BY ytid HAVING SUM(tbl.a) < ?)b ON a.ytid = b.ytid ORDER BY RAND() LIMIT 1), (SELECT ytid FROM songs ORDER BY RAND() LIMIT 1)) AS ytid);"+
       "SELECT * FROM songs WHERE ytid=@id;", [cfg.maxPerWeek, cfg.maxPerDay])).rows[1][0];
     },
-    async updateSong(songData){ //TODO UPDATE/REMOVE
+    async deleteSong(songId){
+      return (await this.queryPromise("SELECT * FROM `songs` WHERE ytid=?; DELETE FROM `songs` WHERE ytid=?", [songId, songId])).rows[0][0];
+    },
+    async updateSong(songData){ //TODO UPDATE
       return (await this.queryPromise("INSERT INTO `songs`(`ytid`, `name`, `length`, `author`, `file`) VALUES "+ 
             "(?,?,?,?,?) ON DUPLICATE KEY UPDATE name=?, length=?, author=?, file=?", 
             [songData.ytid, songData.name, songData.length, songData.author, songData.file, songData.name, songData.length, songData.author, songData.file])).rows;

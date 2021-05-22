@@ -11,10 +11,10 @@ import TextField from '@material-ui/core/TextField';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import { styled } from '@material-ui/core/styles';
-import {Close as CloseIcon,PlayArrow as PlayIcon} from '@material-ui/icons';
+import {Close as CloseIcon,PlayArrow as PlayIcon, Delete as DeleteIcon} from '@material-ui/icons';
 
 
-import {findSong, playSong} from './ApiConnection';
+import {findSong, playSong, deleteSong} from './ApiConnection';
 
 
 const CloseBtn = styled(IconButton)({
@@ -141,6 +141,9 @@ export default function Library(props) {
                 </div>
                 <IconButton className={classes.button} onClick={()=>playSong(song.file, song.name, song.length, song.ytid)}>
                   <PlayIcon/>
+                </IconButton>
+                <IconButton className={classes.button} onClick={()=>deleteSong(song.ytid)}>
+                  <DeleteIcon/>
                 </IconButton>
               </ListItem>
             ))}

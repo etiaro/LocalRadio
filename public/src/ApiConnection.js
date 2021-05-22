@@ -109,6 +109,19 @@ function downloadSong(ytUrl){
     xmlHttp.send('{"url": "'+ytUrl+'"}');
     return false;
 }
+function deleteSong(ytid){
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "POST", adress+"player/delete");
+    xmlHttp.setRequestHeader("Content-Type", "application/json");
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
+    xmlHttp.onerror = HANDLEERROR;
+    xmlHttp.onload = ()=>{ 
+        if(xmlHttp.status !== 200)
+            HANDLEERROR(xmlHttp.responseText);
+     }
+    xmlHttp.send(JSON.stringify({ytid:ytid}));
+    return false;
+}
 function playSong(fileName, songName, length, ytid){
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "POST", adress+"player/play");
@@ -357,7 +370,7 @@ function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist, call
                     callbackPlaylist(res.playlist, res.amplifier);
                     actNotID.playlist = res.notID % 200000008;
                 }
-                if(res.newSong){
+                if(res.newSong || res.deletedSong){
                     callbackLibrary(res.newSong);
                 }
             }catch(e){
@@ -373,4 +386,4 @@ function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist, call
     }, 0);
 }
 
-export {getUserData, changePage, login as apiLogin, logout, findSong, getHistory, getSuggestions, suggest, downloadSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData, sendAmpMode, sendVolume};
+export {getUserData, changePage, login as apiLogin, logout, findSong, getHistory, getSuggestions, suggest, downloadSong,deleteSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData, sendAmpMode, sendVolume};
