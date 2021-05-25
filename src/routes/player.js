@@ -57,10 +57,12 @@ export default () => {
                     return res.status(200).send({msg: "query denied", err: "Nie możesz edytować playlisty dalej niż 5 dni od teraz"});
                 else{
                     player.changePlaylist(req.body.entry, req.userInfo.isAdmin).then(done=>{
-                        if(!done)
-                            return res.status(200).send({msg: "query denied", err: "Osiągnięto już limit dzienny/tygodniowy dla tego utworu"});
-                        else
+                        if(done == 1)
                             return res.status(200).send({msg: "query accepted"});
+                        else if (done == 2)
+                            return res.status(200).send({msg: "query denied", err: "W tym czasie jest już jakaś piosenka"});
+                        else if (done == 0)
+                            return res.status(200).send({msg: "query denied", err: "Osiągnięto już limit dzienny/tygodniowy dla tego utworu"});
                     })
                 }
             }

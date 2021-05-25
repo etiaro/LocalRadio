@@ -178,15 +178,15 @@ class Playlist extends React.Component{
     return time.toLocaleTimeString()
   }
   addClick(time){
-    const date = new Date(this.state.date);
-    if(time.hour){
+    var date = new Date(this.state.date);
+    if (time instanceof Date)
+    {
+      date = time;
+    }else{
       date.setHours(time.hour);
       date.setMinutes(time.minutes);
-    }else{
-      date.setHours(time.getHours());
-      date.setMinutes(time.getMinutes());
+      date.setSeconds(0);
     }
-    date.setSeconds(0);
     this.props.libraryShow((ytid)=>{
       sendPlaylistData({ytid: ytid, date:date}, (data)=>{
         if(data.err)

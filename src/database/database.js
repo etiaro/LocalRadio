@@ -362,15 +362,47 @@ export const database = Object.assign({}, {
           })
         }else{
           return new Promise(resolve =>{
-            this.queryPromise("INSERT INTO playlist(ytid, date) SELECT ?, FROM_UNIXTIME(?) WHERE (SELECT count(*) "+
-            "FROM history WHERE DATE(date) = DATE(FROM_UNIXTIME(?)) AND ytid=?) + " + 
-            "(SELECT count(*) FROM playlist WHERE DATE(date) = DATE(FROM_UNIXTIME(?)) AND date > CURRENT_TIMESTAMP AND ytid=?) < ?"+
-            " AND  (SELECT count(*) FROM history WHERE YEARWEEK(DATE(date), 1) = YEARWEEK(DATE(FROM_UNIXTIME(?)), 1) AND ytid=?) + "+
-            "(SELECT count(*) FROM playlist WHERE YEARWEEK(DATE(date), 1) = YEARWEEK(DATE(FROM_UNIXTIME(?)), 1) AND date > CURRENT_TIMESTAMP AND ytid=?) < ?",
-            [entry.ytid, entry.date, entry.date, entry.ytid, entry.date, entry.ytid, cfg.maxPerDay, entry.date, entry.ytid, entry.date, entry.ytid, cfg.maxPerWeek])
-              .then((r)=>{
-                database.fixPlaylistToFitSchedule(entry.date)
-                resolve(r.rows.affectedRows)
+            // check if you can add song to playlist
+            // check for perDay and perWeek limit
+            // and check if there is already song at this time
+            this.queryPromise(`
+              SELECT count(*) FROM history
+              WHERE DATE(date) = DATE(FROM_UNIXTIME(?)) AND ytid=?;
+              SELECT count(*) FROM playlist WHERE DATE(date) = DATE(FROM_UNIXTIME(?))
+              AND date > CURRENT_TIMESTAMP AND ytid=?;
+              SELECT count(*) FROM history WHERE YEARWEEK(DATE(date), 1) = YEARWEEK(DATE(FROM_UNIXTIME(?)), 1) 
+              AND ytid=?;
+              SELECT count(*) FROM playlist WHERE YEARWEEK(DATE(date), 1) = YEARWEEK(DATE(FROM_UNIXTIME(?)), 1)
+              AND date > CURRENT_TIMESTAMP AND ytid=?;
+              SELECT count(*) FROM playlist WHERE UNIX_TIMESTAMP(date) <= ? 
+              AND (UNIX_TIMESTAMP(date) + (SELECT length FROM songs WHERE ytid = playlist.ytid LIMIT 1)) > ?;
+              `,
+              [entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.date])
+            .then((r) => {
+              if(
+                r.rows[0][0]['count(*)'] + r.rows[1][0]['count(*)'] < cfg.maxPerDay &&
+                r.rows[2][0]['count(*)'] + r.rows[3][0]['count(*)'] < cfg.maxPerWeek
+                )
+              {
+                // limits are OK
+                if (r.rows[4][0]['count(*)'] == 0)
+                {
+                  // this time is available
+                  // add song to playlist
+                  this.queryPromise("INSERT INTO `playlist`(`ytid`, date) VALUES (?, FROM_UNIXTIME(?)) ", [entry.ytid, entry.date])
+                  .then((r) => {
+                    database.fixPlaylistToFitSchedule(entry.date)
+                    resolve(1)
+                  })
+                } else{
+                  // this time is not available!!
+                  resolve(2)
+                }
+              } else{
+                // limits are not OK!!
+                resolve(0)
+              }
+              
             })
           })
         }
