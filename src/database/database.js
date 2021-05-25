@@ -376,8 +376,10 @@ export const database = Object.assign({}, {
               AND date > CURRENT_TIMESTAMP AND ytid=?;
               SELECT count(*) FROM playlist WHERE UNIX_TIMESTAMP(date) <= ? 
               AND (UNIX_TIMESTAMP(date) + (SELECT length FROM songs WHERE ytid = playlist.ytid LIMIT 1)) > ?;
+              SELECT count(*) FROM playlist WHERE (? < UNIX_TIMESTAMP(date)) 
+              AND (? + (SELECT length FROM songs WHERE ytid = ?) >= UNIX_TIMESTAMP(date));
               `,
-              [entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.date])
+              [entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.ytid, entry.date, entry.date, entry.date, entry.date, entry.ytid])
             .then((r) => {
               if(
                 r.rows[0][0]['count(*)'] + r.rows[1][0]['count(*)'] < cfg.maxPerDay &&
@@ -385,7 +387,7 @@ export const database = Object.assign({}, {
                 )
               {
                 // limits are OK
-                if (r.rows[4][0]['count(*)'] == 0)
+                if (r.rows[4][0]['count(*)'] == 0 && r.rows[5][0]['count(*)'] == 0)
                 {
                   // this time is available
                   // add song to playlist
