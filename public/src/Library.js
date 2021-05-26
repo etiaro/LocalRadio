@@ -65,6 +65,9 @@ const useStyles = makeStyles(theme => ({
   },
   loadingWheel:{
     margin: "15px"
+  },
+  url:{
+    textDecoration: 'none'
   }
 }));
 
@@ -130,7 +133,7 @@ export default function Library(props) {
               <ListItem key={song.ytid} className={classes.item}>
                 <div className={classes.texts}>
                   <Typography variant="h5" component="h3" className={classes.title}>
-                  {song.name}
+                  <a href = {"https://www.youtube.com/watch?v=" + song.ytid} className={classes.url}> {song.name} </a>
                   </Typography>
                   <Typography component="p" className={classes.author}>
                   {song.author}
