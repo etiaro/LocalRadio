@@ -1,5 +1,5 @@
 {
-  "name": "back-end",
+  "name": "LocalRadio",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -11,7 +11,7 @@
     "dev": "nodemon -w ./src --exec \"babel-node ./src\""
   },
   "keywords": [],
-  "author": "Jakub Klimek",
+  "author": "etiaro",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.18.3",
