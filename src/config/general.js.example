@@ -5,6 +5,7 @@ export default {
     demo: false,
     volumeDevice: 'Speaker',
     volumeCard: 1,
+    mplayerParameters: ['-volume', 100],
     ffmpegPath: 'ffmpeg',
     maxPerWeek: 3,
     maxPerDay: 1,

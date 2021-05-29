@@ -80,7 +80,7 @@ export const database = Object.assign({}, {
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'songs' LIMIT 1;",[cfg.database], true)
       if(r.rows.length == 0){
         console.log("Songs table not found, creating...");
-        await this.queryPromise("CREATE TABLE `songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(30) NOT NULL , `file` VARCHAR(30) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;",[cfg.database], true)
+        await this.queryPromise("CREATE TABLE `songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(50) NOT NULL , `file` VARCHAR(30) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;",[cfg.database], true)
         console.log('Created table songs');
       }
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'timeSchedule' LIMIT 1;",[cfg.database], true)
