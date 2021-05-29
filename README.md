@@ -17,8 +17,8 @@ $ npm install
 $ cd ..
 $ npm start
 ```
-Then you can access panel at https://localhost
-and log in to administration panel at https://localhost/password
+Then you can access panel at http://localhost
+and log in to administration panel at http://localhost/password
 
 ### Run Development mode
 Run this in main folder for back-end development mode(site will be hosted at localhost)
