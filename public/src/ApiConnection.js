@@ -26,7 +26,7 @@ function makeid(length) {
 const cookies = new Cookies();
 var loginToken = cookies.get('accessToken');
 
-const adress = "http://"+window.location.hostname+"/api/";
+const adress = "/api/";
 var notificationID = makeid(8);
 var actNotID = {player:0, playlist:0};
 

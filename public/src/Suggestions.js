@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import {useLocalStorage} from "react-use-storage";
 
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
@@ -104,9 +105,9 @@ export default function Suggestions(props) {
   const [loading, isLoading] = useState(true);
   const [totalNum, setTotalNum] = useState(-1);
   const [onlyMine, setOnlyMine] = useState(true);
-  const [waiting, setWaiting] = useState(true);
-  const [accepted, setAccepted] = useState(false);
-  const [denied, setDenied] = useState(false);
+  const [waiting, setWaiting] = useLocalStorage('waitingCheckbox', true);
+  const [accepted, setAccepted] = useLocalStorage('acceptedCheckbox', false);
+  const [denied, setDenied] = useLocalStorage('deniedCheckbox', false);
   const [changed, setChanged] = useState(0);
  
   const handleScroll = useCallback((e)=>{

@@ -113,11 +113,11 @@ export const player = Object.assign({}, {
         console.log("playing "+name +" from "+ fileName+" "+length+"seconds");
         if(!cfg.demo){
             if(fs.existsSync('./Music/'+fileName))
-                this.audio = this.p.play('./Music/'+fileName, { mplayer: [ '−volume', 100 ] }, function(err){
+                this.audio = this.p.play('./Music/'+fileName, { mplayer: cfg.mplayerParameters }, function(err){
                     if (err && !err.killed && err !== 1) throw err;
                 });
             else if(fs.existsSync('../Music/'+fileName))
-                this.audio = this.p.play('../Music/'+fileName, { mplayer: [ '−volume', 100 ] }, function(err){
+                this.audio = this.p.play('../Music/'+fileName, { mplayer: cfg.mplayerParameters }, function(err){
                     if (err && !err.killed && err !== 1) throw err;
                 });
             else

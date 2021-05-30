@@ -133,7 +133,12 @@ export default function Library(props) {
               <ListItem key={song.ytid} className={classes.item}>
                 <div className={classes.texts}>
                   <Typography variant="h5" component="h3" className={classes.title}>
-                  <a href = {"https://www.youtube.com/watch?v=" + song.ytid} className={classes.url} target="_blank"> {song.name} </a>
+                  <a href = {"https://www.youtube.com/watch?v=" + song.ytid}
+                  className={classes.url}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                    {song.name}
+                  </a>
                   </Typography>
                   <Typography component="p" className={classes.author}>
                   {song.author}

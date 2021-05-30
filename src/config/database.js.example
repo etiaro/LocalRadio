@@ -4,6 +4,7 @@ export default {
         user: "user",
         password: "pass",
         database: "db_name",
-        multipleStatements: true
-      }
+        multipleStatements: true,
+        charset: "utf8mb4_unicode_ci"
+    }
 };
