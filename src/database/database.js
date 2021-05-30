@@ -221,7 +221,12 @@ export const database = Object.assign({}, {
         query = "UPDATE suggestions SET status=? WHERE id=?;";
         inserts.push(sData.status, sData.id)
       }else if(sData.userId && sData.ytid){
-        var info = await ytcore.getBasicInfo(sData.ytid)
+        try {
+          var info = await ytcore.getBasicInfo(sData.ytid)
+        } catch(e)
+        {
+          return {err: "Failed to get video data"}
+        }     
         query = "INSERT IGNORE INTO suggestions (userId, status, ytid, name, views) VALUES(?, 0, ?, ?, ?);"
         inserts.push(sData.userId, sData.ytid, info.videoDetails.title, info.videoDetails.viewCount)
       }
