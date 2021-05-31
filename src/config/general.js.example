@@ -9,6 +9,7 @@ export default {
     ffmpegPath: 'ffmpeg',
     maxPerWeek: 3,
     maxPerDay: 1,
-    daysInFuture: 5
+    daysInFuture: 5,
+    timeOffset: 0 // how long to start playing after choosen time, in seconds; can be negative
 };
   

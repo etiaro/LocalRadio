@@ -260,7 +260,7 @@ export const player = Object.assign({}, {
             database.getPlaylistData().then((res)=>{
                 if(res.length == 0)
                     return;
-                if(res[0].date*1000 <= new Date().getTime()){
+                if((res[0].date*1000) + (cfg.timeOffset * 1000) <= new Date().getTime()){
                     this.playSong(res[0].file, res[0].name, res[0].length, res[0].ytid);
                     database.modifyPlaylist({id: res[0].id, was: 1});
                 }

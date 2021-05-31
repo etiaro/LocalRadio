@@ -310,7 +310,7 @@ export const database = Object.assign({}, {
       return r.rows;
     },
     async getPlaylistData(){
-      var time = new Date(Date.now() - 30000);
+      var time = new Date(Date.now() - 30000 - cfg.timeOffset * 1000);
       time = Math.floor(time.getTime()/1000);
       return (await this.queryPromise(" UPDATE `playlist` SET `was`=1 WHERE `date`<FROM_UNIXTIME(?); SELECT playlist.id, UNIX_TIMESTAMP(playlist.date) AS date, songs.* FROM songs INNER JOIN playlist ON songs.ytid = playlist.ytid AND playlist.was=0 ORDER BY `date` ASC;", [time])
               ).rows[1];

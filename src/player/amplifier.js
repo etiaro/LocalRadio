@@ -75,12 +75,28 @@ export const amplifier = Object.assign({}, {
                             lastMode = '-';
                             return;
                         }
-                        var enable = false;
+                        var enable = false;                        
+                        function ToDateObject(t){
+                            var toReturn = new Date();
+                            toReturn.setHours(t.hour);
+                            toReturn.setMinutes(t.minutes);
+                            toReturn.setSeconds(0);
+                            toReturn.setMilliseconds(0);
+                            return toReturn;
+                        };
+                        
                         for(let t of res.data.enabledTimes){
-                            if(t.begin.hour <= now.getHours() && t.begin.minutes <= now.getMinutes() &&
-                                t.end.hour >= now.getHours() && t.end.minutes > now.getMinutes())
+                            var startTime = ToDateObject(t.begin)
+                            var endTime = ToDateObject(t.end)
+
+                            if (now.getTime() >= (startTime.getTime() + cfg.timeOffset * 1000) 
+                                && now.getTime() <= (endTime.getTime() + cfg.timeOffset * 1000)
+                            )
+                            {
                                 enable = true;
+                            }
                         }
+
                         if(enable){
                             port.write('+');
                             if(lastMode !== '+' && player.isShuffle) player.playShuffle();
