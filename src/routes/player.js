@@ -48,6 +48,23 @@ export default () => {
             if(!!req.body.entry.id)
                 checkAdmin(req,res,()=>{
                     player.changePlaylist(req.body.entry, req.userInfo.isAdmin)
+                    var now = new Date();
+                    var log = now.toUTCString() + " " + req.ip + " admin";
+                    if(req.body.entry.ytid){
+                        log = log + " " + req.body.entry.ytid;
+                    }
+                    if(req.body.entry.date){
+                        log = log + " " + req.body.entry.date;
+                    }
+                    if(req.body.entry.was){
+                        log = log + " " + req.body.entry.date;
+                    }
+                    if(req.body.entry.id){
+                        if(req.body.entry.delete){
+                            log += " delete"
+                        }
+                    }
+                    console.log(log);
                     return res.status(200).send({msg: "query accepted"});
                 });
             else{
@@ -58,7 +75,26 @@ export default () => {
                 else{
                     player.changePlaylist(req.body.entry, req.userInfo.isAdmin).then(done=>{
                         if(done == 1)
+                        {
+                            var now = new Date();
+                            var log = now.toUTCString() + " " + req.ip;
+                            if(req.body.entry.ytid){
+                                log = log + " " + req.body.entry.ytid;
+                            }
+                            if(req.body.entry.date){
+                                log = log + " " + req.body.entry.date;
+                            }
+                            if(req.body.entry.was){
+                                log = log + " " + req.body.entry.date;
+                            }
+                            if(req.body.entry.id){
+                                if(req.body.entry.delete){
+                                    log += " delete"
+                                }
+                            }
+                            console.log(log);
                             return res.status(200).send({msg: "query accepted"});
+                        }
                         else if (done == 2)
                             return res.status(200).send({msg: "query denied", err: "W tym czasie jest już jakaś piosenka"});
                         else if (done == 0)
