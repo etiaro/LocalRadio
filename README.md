@@ -4,7 +4,7 @@ Radio system with online access and management written in node.js, ES6 standard
 ### Usage
 Empty MySQL database with charset ```utf8mb4``` and ```utf8mb4_unicode_ci``` collation needs to be set up, LocalRadio will automatically create tables.
 
-Clone reposity
+Clone repository
 
 ```database.js``` and ```general.js``` files in ```src/config``` directory have to be present\
 Refer to example config files in this directory

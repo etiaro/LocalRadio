@@ -80,7 +80,7 @@ export const database = Object.assign({}, {
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'songs' LIMIT 1;",[cfg.database], true)
       if(r.rows.length == 0){
         console.log("Songs table not found, creating...");
-        await this.queryPromise("CREATE TABLE `songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(50) NOT NULL , `file` VARCHAR(30) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;",[cfg.database], true)
+        await this.queryPromise("CREATE TABLE `songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(50) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;",[cfg.database], true)
         console.log('Created table songs');
       }
       r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'timeSchedule' LIMIT 1;",[cfg.database], true)
@@ -135,9 +135,9 @@ export const database = Object.assign({}, {
       return (await this.queryPromise("SELECT * FROM `songs` WHERE ytid=?; DELETE FROM `songs` WHERE ytid=?", [songId, songId])).rows[0][0];
     },
     async updateSong(songData){ //TODO UPDATE
-      return (await this.queryPromise("INSERT INTO `songs`(`ytid`, `name`, `length`, `author`, `file`) VALUES "+ 
-            "(?,?,?,?,?) ON DUPLICATE KEY UPDATE name=?, length=?, author=?, file=?", 
-            [songData.ytid, songData.name, songData.length, songData.author, songData.file, songData.name, songData.length, songData.author, songData.file])).rows;
+      return (await this.queryPromise("INSERT INTO `songs`(`ytid`, `name`, `length`, `author`) VALUES "+ 
+            "(?,?,?,?) ON DUPLICATE KEY UPDATE name=?, length=?, author=?", 
+            [songData.ytid, songData.name, songData.length, songData.author, songData.name, songData.length, songData.author])).rows;
     },
     async findSong(songData){ //TODO better searching!
       var query = "SELECT * FROM `songs` ";

@@ -147,7 +147,7 @@ export default function Library(props) {
                   {translateTime(song.length)}
                   </Typography>
                 </div>
-                <IconButton className={classes.button} onClick={()=>playSong(song.file, song.name, song.length, song.ytid)}>
+                <IconButton className={classes.button} onClick={()=>playSong(song.name, song.length, song.ytid)}>
                   <PlayIcon/>
                 </IconButton>
                 <IconButton className={classes.button} onClick={()=>deleteSong(song.ytid)}>

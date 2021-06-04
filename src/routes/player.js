@@ -92,8 +92,8 @@ export default () => {
             player.switchShuffle();
             return res.status(200).send({msg: "query accepted"});
         }
-        if(req.body.fileName){
-            player.playSong(req.body.fileName, req.body.songName, req.body.length, req.body.ytid);
+        if(req.body.ytid){
+            player.playSong(req.body.songName, req.body.length, req.body.ytid);
             return res.status(200).send({msg: "query accepted"});
         }
         return res.status(500).send({msg: "Query denied. Give filename!"});
