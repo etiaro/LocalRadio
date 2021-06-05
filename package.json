@@ -20,6 +20,7 @@
     "express": "^4.16.3",
     "ffmpeg-normalize": "^1.8.0",
     "get-youtube-id": "^1.0.1",
+    "glob": "^7.1.7",
     "jsonwebtoken": "^8.5.1",
     "loudness": "https://github.com/etiaro/node-loudness.git",
     "moment": "^2.24.0",

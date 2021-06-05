@@ -8,6 +8,7 @@ import { notification } from './notification';
 import { amplifier } from './amplifier';
 import cfg from '../config/general';
 import normalize from 'ffmpeg-normalize';
+import glob from 'glob';
 
 
 const pl = { _instance: null, get instance() { if (!this._instance) { this._instance = { singletonMethod() { return 'singletonMethod'; }, _type: 'NoClassSingleton', get type() { return this._type; }, set type(value) { this._type = value; } }; } return this._instance; } };
@@ -113,11 +114,6 @@ export const player = Object.assign({}, {
     playSong(name, length, ytid) {
         let fileName = ytid + '.mp3';
         this.clearLastPlay();
-        player.isPlaying = true;
-        player.startTime = new Date();
-        player.songInfo.name = name;
-        player.songInfo.length = length;
-        player.songInfo.ytid = ytid;
         console.log("playing " + name + " from " + fileName + " " + length + "seconds");
         if (!cfg.demo) {
             if (fs.existsSync('./Music/' + fileName) &&
@@ -125,6 +121,11 @@ export const player = Object.assign({}, {
                 this.audio = this.p.play('./Music/' + fileName, { mplayer: cfg.mplayerParameters }, function (err) {
                     if (err && !err.killed && err !== 1) throw err;
                 });
+                player.isPlaying = true;
+                player.startTime = new Date();
+                player.songInfo.name = name;
+                player.songInfo.length = length;
+                player.songInfo.ytid = ytid;
                 player.sendPlayerData();
                 database.addHistory({ date: new Date(), ytid: ytid });
                 player.shuffleTimeout = setTimeout(() => {
@@ -136,7 +137,8 @@ export const player = Object.assign({}, {
             }
             else {
                 player.downloadSong(ytid);
-                throw "playing failed. File not found!";
+                notification.notify({ msg: 'Nie ma tego pliku, pobieranie...' }, true);
+                this.fixMissingFiles();
             }
         }
     },
@@ -271,5 +273,13 @@ export const player = Object.assign({}, {
                 }
             });
         }, 1000);
+    },
+    fixMissingFiles() {
+        glob('*.mp3', { cwd: 'Music' }, (err, files) => {
+            let ytids = files.map(f => path.basename(f, '.mp3'));
+            database.getMissingSongs(ytids).then((res) => {
+                this.downloadSongs(res.map(r => r.ytid));
+            });
+        });
     }
 });

@@ -345,7 +345,7 @@ function sendVolume(vol) {
 }
 function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist, callbackLibrary) {
     setTimeout(() => {
-        var xmlHttp = new XMLHttpRequest();
+        let xmlHttp = new XMLHttpRequest();
         xmlHttp.open("POST", adress + "notification/");
         xmlHttp.setRequestHeader("Content-Type", "application/json");
         xmlHttp.setRequestHeader("x-access-token", loginToken);
