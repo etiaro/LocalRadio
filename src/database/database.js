@@ -128,7 +128,10 @@ export const database = Object.assign({}, {
     return (await this.queryPromise("SELECT * FROM `songs` WHERE ytid=?", [songId])).rows[0];
   },
   async getMissingSongs(songIds) {
-    return (await this.queryPromise("SELECT ytid FROM `songs` WHERE ytid NOT IN ("+(new Array(songIds.length).fill('?').join(','))+");", songIds)).rows;
+    if (songIds.length > 0)
+      return (await this.queryPromise("SELECT ytid FROM `songs` WHERE ytid NOT IN (" + (new Array(songIds.length).fill('?').join(',')) + ");", songIds)).rows;
+    else
+      return (await this.queryPromise("SELECT ytid FROM `songs`")).rows;
   },
   async getRandomSong() {
     return (await this.queryPromise("SET @id= (SELECT IFNULL((SELECT a.ytid FROM (SELECT ytid FROM ( SELECT COUNT(*) AS a, ytid FROM history WHERE YEARWEEK(DATE(date))=YEARWEEK(CURRENT_DATE) GROUP BY ytid UNION SELECT COUNT(*) as a, ytid FROM playlist WHERE YEARWEEK(DATE(date))=YEARWEEK(CURRENT_DATE) GROUP BY ytid UNION SELECT 0 as a, ytid FROM songs GROUP BY ytid )tbl GROUP BY ytid HAVING SUM(tbl.a) < ?)a INNER JOIN (SELECT SUM(tbl.a) as s, ytid FROM ( SELECT COUNT(*) AS a, ytid FROM history WHERE DATE(date)=CURRENT_DATE GROUP BY ytid UNION SELECT COUNT(*) as a, ytid FROM playlist WHERE DATE(date)=CURRENT_DATE GROUP BY ytid UNION SELECT 0 as a, ytid FROM songs GROUP BY ytid )tbl GROUP BY ytid HAVING SUM(tbl.a) < ?)b ON a.ytid = b.ytid ORDER BY RAND() LIMIT 1), (SELECT ytid FROM songs ORDER BY RAND() LIMIT 1)) AS ytid);" +

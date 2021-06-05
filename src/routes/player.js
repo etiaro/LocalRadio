@@ -109,17 +109,17 @@ export default () => {
         return res.status(200).send({ msg: "query accepted" });
     })
     api.post('/download', checkAdmin, (req, res, next) => {
+        player.fixMissingFiles();
         if (req.body.url) {
             if (req.body.url.includes("playlist")) {
                 let id = req.body.url.match(/[&?]list=([^&]+)/i);
                 if (id.length < 2)
-                    return res.status(404).send({ msg: "Query denied. Can't find playlist id!" });
+                    return res.status(400).send({ msg: "Query denied. Can't find playlist id!" });
                 res.status(200).send({ msg: "query accepted" });
                 scrapePlaylist(id[1]).then(data => {
                     var playlist = data.playlist;
                     player.downloadSongs(playlist.map(s => s.id));
                 });
-                return;
             } else {
                 req.body.ytid = getYouTubeID(req.body.url);
             }
@@ -128,7 +128,7 @@ export default () => {
             player.downloadSong(req.body.ytid);
             return res.status(200).send({ msg: "query accepted" });
         }
-        return res.status(400).send({ msg: "Query denied. Give ytid!" });
+        return res.status(200).send({ msg: "Downloading missing files" });
     });
 
     api.post('/data/', checkLogged, (req, res, next) => {

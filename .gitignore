@@ -3,6 +3,8 @@
 node_modules
 .DS_store
 *.mp3
+*.mp3.TEMP
+*.mp3.DOWNLOAD
 dist
 src/config/database.js
 src/config/general.js

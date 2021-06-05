@@ -51,21 +51,21 @@ export const checkAdmin = (req, res, next)=>{
     jwt.verify(req.headers['x-access-token'], req.app.get('secretKey'), function(err, decoded) {
         if (err) {
             if(!cfg.useFacebook){
-                return res.status(500).send({message: "You're not logged in!", data:null});
+                return res.status(403).send({message: "You're not logged in!", data:null});
             }else
                 return res.status(500).send({message: err.message, data:null});
         }else{
             if(!cfg.useFacebook){
                 req.userInfo = decoded.userInfo;
                 if(!req.userInfo.isAdmin)                   //HERE IS THE DIFFERENCE TO VALIDATE!
-                        return res.status(500).send({message: "You're not an admin!", data:null});
+                        return res.status(403).send({message: "You're not an admin!", data:null});
                 next();
             }else
                 database.getUser(decoded.userInfo.id).then((result)=>{
                     req.userInfo = decoded.userInfo;
                     req.userInfo.isAdmin = result.isAdmin;
                     if(!req.userInfo.isAdmin)                   //HERE IS THE DIFFERENCE TO VALIDATE!
-                        return res.status(500).send({message: "You're not an admin!", data:null});
+                        return res.status(403).send({message: "You're not an admin!", data:null});
                     next();
                 });
         }
