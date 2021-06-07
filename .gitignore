@@ -10,3 +10,4 @@ package-lock.json
 public/package-lock.json
 .vs/
 yarn.lock
+.vscode/
