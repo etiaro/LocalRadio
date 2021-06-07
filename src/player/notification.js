@@ -1,55 +1,70 @@
-const not = {_instance: null, get instance() { if (!this._instance) {this._instance = { singletonMethod() {return 'singletonMethod2';},_type: 'NoClassSingleton1', get type() { return this._type;},set type(value) {this._type = value;}};}return this._instance; }};
-export default not;  //singleton stuff, don't care about it
-
+const not = {
+  instance: null,
+  get getInstance() {
+    if (!this.instance) {
+      this.instance = {
+        singletonMethod() { return 'singletonMethod2'; },
+        type: 'NoClassSingleton1',
+        get getType() { return this.type; },
+        set getType(value) { this.type = value; },
+      };
+    }
+    return this.instance;
+  },
+};
+export default not; // singleton stuff, don't care about it
 
 export const notification = Object.assign({}, {
-    singletonMethod() {
-      return 'singletonMethod2';
-    },
-    notID: 0,
-    _type: 'NotificationController',
-    get type() {
-      return this._type;
-    },
-    set type(value) {
-      this._type = value;
-    },
+  singletonMethod() {
+    return 'singletonMethod2';
+  },
+  notID: 0,
+  type: 'NotificationController',
+  get getType() {
+    return this.type;
+  },
+  set getTpye(value) {
+    this.type = value;
+  },
 
-    listeners: {},
-    addListener(res, id, isAdmin){
-        this.listeners[id] = {
-            send: (data)=>{
-                    res.status(200).send(data);
-                  },
-            sent: 0,
-            isAdmin: isAdmin
+  listeners: {},
+  addListener(res, id, isAdmin) {
+    this.listeners[id] = {
+      send: (data) => {
+        res.status(200).send(data);
+      },
+      sent: 0,
+      isAdmin,
+    };
+  },
+  sendTo(data, id) {
+    const sendID = id;
+    setTimeout(() => {
+      if (!(notification.listeners[sendID])) return;
+      if (notification.listeners[sendID].sent >= 50) {
+        delete notification.listeners[sendID];
+        return;
+      }
+      if (notification.listeners[sendID].sent !== 0) {
+        notification.listeners[sendID].sent += 1;
+        this.sendTo(data, id);
+      } else {
+        try {
+          notification.listeners[sendID].sent = 1;
+          notification.listeners[sendID].send(data);
+        } catch (e) {
+          console.log(e);
         }
-    },
-    sendTo(data, id){
-        const sendID = id;
-        setTimeout(()=>{
-            if(!(notification.listeners[sendID]))
-                return;
-            if(notification.listeners[sendID].sent >= 50){
-                delete notification.listeners[sendID];
-                return;
-            }
-            if(notification.listeners[sendID].sent != 0){
-                notification.listeners[sendID].sent++;
-                this.sendTo(data, id);
-            }else
-                try{
-                    notification.listeners[sendID].sent = 1;
-                    notification.listeners[sendID].send(data); 
-                }catch(e){
-                }
-        }, 200);
-    },
-    notify(data, adminOnly){
-        data.notID = this.notID++;
-        this.notID %= 200000009;
-        for(let id in this.listeners)
-            if((adminOnly && this.listeners[id].isAdmin)||!adminOnly)
-                this.sendTo(data, id);
-    }
+      }
+    }, 200);
+  },
+  notify(data, adminOnly) {
+    this.notID += 1;
+    // eslint-disable-next-line no-param-reassign
+    data.notID = this.notID;
+    this.notID %= 200000009;
+    Object.keys(this.listeners).forEach((id) => {
+      if ((adminOnly && this.listeners[id].isAdmin) || !adminOnly) { this.sendTo(data, id); }
+    });
+  },
 });
