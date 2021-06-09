@@ -3,12 +3,13 @@ import { database } from "../database/database";
 import ytdl from "ytdl-core";
 import p from 'play-sound';
 import path from 'path';
-import fs from 'fs';
+import fs, { access } from 'fs';
 import { notification } from './notification';
 import { amplifier } from './amplifier';
 import cfg from '../config/general';
 import normalize from 'ffmpeg-normalize';
 import glob from 'glob';
+import { constants } from "buffer";
 
 
 const pl = { _instance: null, get instance() { if (!this._instance) { this._instance = { singletonMethod() { return 'singletonMethod'; }, _type: 'NoClassSingleton', get type() { return this._type; }, set type(value) { this._type = value; } }; } return this._instance; } };
@@ -58,22 +59,21 @@ export const player = Object.assign({}, {
 			//notification.notify({msg: 'Downloading '+ytid+', '+Math.round(progress.progress.percentage)+'%'}, true);
 		});
 		player.YD.on("finished", function (err, data) {
-			let id = data.videoId;
-			let parsedpath = path.parse(data.file);
-			let file = path.join('.', parsedpath.dir, parsedpath.name);
-			console.log('Downloaded ' + parsedpath.base);
+			let song = {ytid: data.videoId, file: path.parse(data.file).name};
+			let filepath = path.join('Music', song.file);
+			console.log('Downloaded ' + song.file);
 
 			//NORMALIZATION
-			fs.rename(data.file, file + ".TEMP", (err) => {
+			fs.rename(data.file, filepath + ".TEMP", (err) => {
 				if (err) {
-					player.removefromqueue(id);
+					player.removefromqueue(song.ytid);
 					console.error(err);
 					return;
 				}
-				console.log("Normalizing " + path.basename(file + '.TEMP'));
+				console.log("Normalizing " + path.basename(song.file + '.TEMP'));
 				normalize({
-					input: file + ".TEMP",
-					output: file,
+					input: filepath + ".TEMP",
+					output: filepath,
 					loudness: {
 						normalization: 'rms',
 						target:
@@ -84,29 +84,26 @@ export const player = Object.assign({}, {
 					verbose: false
 				}).then(normalized => {
 					console.log("Normalized " + path.basename(normalized.info.output));
-					fs.unlinkSync(file + ".TEMP");
-					ytdl.getBasicInfo(id).then((data) => {
-						let song = {
-							ytid: id,
-							name: data.videoDetails.title,
-							author: data.videoDetails.author.name,
-							length: data.videoDetails.lengthSeconds
-						};
+					fs.unlinkSync(filepath + ".TEMP");
+					ytdl.getBasicInfo(song.ytid).then((data) => {
+						song.name = data.videoDetails.title;
+						song.author = data.videoDetails.author.name;
+						song.length = data.videoDetails.lengthSeconds;
 						database.updateSong(song).then(() => {
-							player.removefromqueue(id);
+							player.removefromqueue(song.ytid);
 							notification.notify({ msg: 'Pomyślnie pobrano i znormalizowano ' + song.name, newSong: song.name }, true);
-							console.log("Finished downloading and normalizing " + song.name + " to " + id + '.mp3');
-							if (player.wantstoplay && player.wantstoplay === id) {
-								player.playSong(song.name, song.length, id);
+							console.log("Finished downloading and normalizing " + song.name + " to " + song.ytid + '.mp3');
+							if (player.wantstoplay && player.wantstoplay === song.file) {
+								player.playSong(song.file, song.name, song.length, song.ytid);
 							}
 						});
 					}).catch((err) => {
 						console.log(err);
-						player.removefromqueue(id);
+						player.removefromqueue(song.ytid);
 					});
 				}).catch(err => {
 					console.error(err);
-					player.removefromqueue(id);
+					player.removefromqueue(song.ytid);
 				});
 			});
 		});
@@ -114,10 +111,10 @@ export const player = Object.assign({}, {
 			console.log(size + " left in youtube-mp3-downloader queue");
 		});
 		player.startPlaylistWatchman();
+		player.fixMissingFiles();
 	},
-	playSong(name, length, ytid) {
-		this.wantstoplay = ytid;
-		let fileName = ytid + '.mp3';
+	playSong(fileName, name, length, ytid) {
+		this.wantstoplay = fileName;
 		this.clearLastPlay();
 		console.log("playing " + name + " from " + fileName + " " + length + "seconds");
 		if (!cfg.demo) {
@@ -143,7 +140,7 @@ export const player = Object.assign({}, {
 			else {
 				player.downloadSong(ytid);
 				notification.notify({ msg: 'Nie ma tego pliku, pobieranie...' }, true);
-				this.fixMissingFiles();
+				player.fixMissingFiles();
 			}
 		}
 	},
@@ -152,7 +149,7 @@ export const player = Object.assign({}, {
 			this.isShuffle = true;
 			database.getRandomSong().then((song) => {
 				if (song)
-					player.playSong(song.name, song.length, song.ytid);
+					player.playSong(song.file, song.name, song.length, song.ytid);
 			});
 		}
 	},
@@ -185,7 +182,7 @@ export const player = Object.assign({}, {
 	stopPlaying(leaveSuffle) {
 		this.wantstoplay = "";
 		this.clearLastPlay();
-		var tmp = this.isPlaying;
+		let tmp = this.isPlaying;
 		this.isPlaying = false;
 		if (!leaveSuffle)
 			this.isShuffle = false;
@@ -212,7 +209,7 @@ export const player = Object.assign({}, {
 			notification.notify({ msg: 'Pobieranie jest wyłączone w trybie demostracyjnym' }, true);
 			return;
 		}
-		let filename = ytid + '.mp3';
+		let filename = ytid + '.yt.mp3';
 		let filepath = path.join('.', 'Music', filename);
 		database.getSong(ytid).then((res) => {
 			if (player.downloadQ.indexOf(ytid) !== -1) {
@@ -230,6 +227,8 @@ export const player = Object.assign({}, {
 				notification.notify({ msg: 'Pomijam ' + ytid + ' - jest już pobrane' }, true);
 				return;
 			}
+
+			notification.notify({ msg: 'Pobieram ' + ytid }, true);
 
 			player.downloadQ.push(ytid);
 			player.YD.download(ytid, filename + '.DOWNLOAD');
@@ -253,7 +252,7 @@ export const player = Object.assign({}, {
 		});
 	},
 	getInfo() {
-		var time = Math.floor(((new Date()).getTime() - this.startTime.getTime()) / 1000);
+		let time = Math.floor(((new Date()).getTime() - this.startTime.getTime()) / 1000);
 		return { isPlaying: this.isPlaying, time: time, isShuffle: this.isShuffle, song: this.songInfo, amplifierMode: amplifier.mode, volume: amplifier.volume };
 	},
 	changePlaylist(data, isAdmin) {
@@ -266,7 +265,7 @@ export const player = Object.assign({}, {
 	},
 	startPlaylistWatchman() {
 		amplifier.startWatchman();
-		var Dhelper = new Date();
+		let Dhelper = new Date();
 		setInterval(() => {
 			if (Dhelper.getDate() !== new Date().getDate())
 				database.fixPlaylistToFitSchedule()
@@ -274,18 +273,23 @@ export const player = Object.assign({}, {
 				if (res.length == 0)
 					return;
 				if ((res[0].date * 1000) + (cfg.timeOffset * 1000) <= new Date().getTime()) {
-					this.playSong(res[0].name, res[0].length, res[0].ytid);
+					this.playSong(res[0].file, res[0].name, res[0].length, res[0].ytid);
 					database.modifyPlaylist({ id: res[0].id, was: 1 });
 				}
 			});
 		}, 1000);
 	},
 	fixMissingFiles() {
-		glob('*.mp3', { cwd: 'Music' }, (err, files) => {
-			let ytids = files.map(f => path.basename(f, '.mp3'));
-			database.getMissingSongs(ytids).then((res) => {
-				this.downloadSongs(res.map(r => r.ytid));
-			});
+		console.log('fixing missing files');
+		notification.notify({ msg: 'Pobieranie brakujących plików...' }, true);
+		database.getSongFiles().then((res) => {
+			for (const s of res) {
+				access('./Music/'+s.file, constants.F_OK, (err)=>{
+					if (err) {
+						player.downloadSong(s.ytid);
+					}
+				})
+			}
 		});
 	}
 });

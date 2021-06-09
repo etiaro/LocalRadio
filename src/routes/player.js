@@ -93,7 +93,7 @@ export default () => {
             return res.status(200).send({ msg: "query accepted" });
         }
         if (req.body.ytid) {
-            player.playSong(req.body.songName, req.body.length, req.body.ytid);
+            player.playSong(req.body.fileName, req.body.songName, req.body.length, req.body.ytid);
             return res.status(200).send({ msg: "query accepted" });
         }
         return res.status(400).send({ msg: "Query denied. Give filename!" });
@@ -109,7 +109,6 @@ export default () => {
         return res.status(200).send({ msg: "query accepted" });
     })
     api.post('/download', checkAdmin, (req, res, next) => {
-        player.fixMissingFiles();
         if (req.body.url) {
             if (req.body.url.includes("playlist")) {
                 let id = req.body.url.match(/[&?]list=([^&]+)/i);
@@ -128,8 +127,13 @@ export default () => {
             player.downloadSong(req.body.ytid);
             return res.status(200).send({ msg: "query accepted" });
         }
-        return res.status(200).send({ msg: "Downloading missing files" });
+        return res.status(400).send({msg: "Query denied. Give either ytid or url!"});
     });
+
+    api.put('/sync', checkAdmin, (req, res)=>{
+        player.fixMissingFiles();
+        return res.status(204).send();
+    })
 
     api.post('/data/', checkLogged, (req, res, next) => {
         return res.status(200).send(player.getInfo());

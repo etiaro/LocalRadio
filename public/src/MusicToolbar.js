@@ -7,8 +7,8 @@ import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import { switchShuffle, stopSong } from './ApiConnection';
-import { Menu as MenuIcon, PlayCircleOutline as PlayIcon, PauseCircleOutline as PauseIcon, LibraryAdd as AddIcon, Shuffle } from '@material-ui/icons';
+import { switchShuffle, stopSong, syncSongs } from './ApiConnection';
+import { Menu as MenuIcon, PlayCircleOutline as PlayIcon, PauseCircleOutline as PauseIcon, Sync, LibraryAdd as AddIcon, Shuffle } from '@material-ui/icons';
 
 function isOverflowing(el) {
     return el.offsetWidth < el.scrollWidth;
@@ -36,21 +36,25 @@ const useStyles = makeStyles(theme => ({
         position: "absolute",
         right: 0
     },
-    addBtn: {
+    syncBtn: {
         position: "absolute",
         left: 0
     },
-    playBtn: {
+    addBtn: {
         position: "absolute",
         left: 40
     },
-    stopBtn: {
+    playBtn: {
         position: "absolute",
         left: 80
     },
+    stopBtn: {
+        position: "absolute",
+        left: 120
+    },
     shuffleBtn: {
         position: "absolute",
-        left: 120,
+        left: 160,
         color: "gray"
     },
     scrollable: {
@@ -68,7 +72,7 @@ const useStyles = makeStyles(theme => ({
     title: {
         position: "absolute",
         padding: 0,
-        left: 160,
+        left: 200,
         width: "fit-content",
         height: "100%",
         display: "flex",
@@ -101,6 +105,10 @@ export default function MusicToolbar(props) {
 
     function playClick() {
         switchShuffle(true);
+    }
+
+    function syncClick() {
+        syncSongs();
     }
 
     var color = "gray";
@@ -143,6 +151,9 @@ export default function MusicToolbar(props) {
                         </IconButton>
                         <IconButton color="inherit" onClick={() => props.addWindowSwitch()} className={classes.addBtn} >
                             <AddIcon />
+                        </IconButton>
+                        <IconButton color="inherit" onClick={() => syncClick()} className={classes.syncBtn} >
+                            <Sync />
                         </IconButton>
                         <IconButton color="inherit" onClick={() => playClick()} className={classes.playBtn} >
                             <PlayIcon />

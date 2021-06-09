@@ -80,7 +80,7 @@ export const database = Object.assign({}, {
     r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'songs' LIMIT 1;", [cfg.database], true)
     if (r.rows.length == 0) {
       console.log("Songs table not found, creating...");
-      await this.queryPromise("CREATE TABLE `songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(50) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;", [cfg.database], true)
+      await this.queryPromise("CREATE TABLE `songs` ( `ytid` VARCHAR(30) NOT NULL , `name` VARCHAR(150) NOT NULL , `length` VARCHAR(10) NOT NULL , `author` VARCHAR(50) NOT NULL , `file` VARCHAR(30) NOT NULL , PRIMARY KEY (`ytid`)) ENGINE = InnoDB;", [cfg.database], true)
       console.log('Created table songs');
     }
     r = await this.queryPromise("SELECT * FROM information_schema.tables WHERE table_schema = ? AND table_name = 'timeSchedule' LIMIT 1;", [cfg.database], true)
@@ -127,11 +127,8 @@ export const database = Object.assign({}, {
   async getSong(songId) {
     return (await this.queryPromise("SELECT * FROM `songs` WHERE ytid=?", [songId])).rows[0];
   },
-  async getMissingSongs(songIds) {
-    if (songIds.length > 0)
-      return (await this.queryPromise("SELECT ytid FROM `songs` WHERE ytid NOT IN (" + (new Array(songIds.length).fill('?').join(',')) + ");", songIds)).rows;
-    else
-      return (await this.queryPromise("SELECT ytid FROM `songs`")).rows;
+  async getSongFiles() {
+    return (await this.queryPromise("SELECT ytid, file FROM `songs`")).rows;
   },
   async getRandomSong() {
     return (await this.queryPromise("SET @id= (SELECT IFNULL((SELECT a.ytid FROM (SELECT ytid FROM ( SELECT COUNT(*) AS a, ytid FROM history WHERE YEARWEEK(DATE(date))=YEARWEEK(CURRENT_DATE) GROUP BY ytid UNION SELECT COUNT(*) as a, ytid FROM playlist WHERE YEARWEEK(DATE(date))=YEARWEEK(CURRENT_DATE) GROUP BY ytid UNION SELECT 0 as a, ytid FROM songs GROUP BY ytid )tbl GROUP BY ytid HAVING SUM(tbl.a) < ?)a INNER JOIN (SELECT SUM(tbl.a) as s, ytid FROM ( SELECT COUNT(*) AS a, ytid FROM history WHERE DATE(date)=CURRENT_DATE GROUP BY ytid UNION SELECT COUNT(*) as a, ytid FROM playlist WHERE DATE(date)=CURRENT_DATE GROUP BY ytid UNION SELECT 0 as a, ytid FROM songs GROUP BY ytid )tbl GROUP BY ytid HAVING SUM(tbl.a) < ?)b ON a.ytid = b.ytid ORDER BY RAND() LIMIT 1), (SELECT ytid FROM songs ORDER BY RAND() LIMIT 1)) AS ytid);" +
@@ -141,9 +138,9 @@ export const database = Object.assign({}, {
     return (await this.queryPromise("SELECT * FROM `songs` WHERE ytid=?; DELETE FROM `songs` WHERE ytid=?", [songId, songId])).rows[0][0];
   },
   async updateSong(songData) { //TODO UPDATE
-    return (await this.queryPromise("INSERT INTO `songs`(`ytid`, `name`, `length`, `author`) VALUES " +
-      "(?,?,?,?) ON DUPLICATE KEY UPDATE name=?, length=?, author=?",
-      [songData.ytid, songData.name, songData.length, songData.author, songData.name, songData.length, songData.author])).rows;
+    return (await this.queryPromise("INSERT INTO `songs`(`ytid`, `name`, `length`, `author`, `file`) VALUES "+ 
+    "(?,?,?,?,?) ON DUPLICATE KEY UPDATE name=?, length=?, author=?, file=?",
+    [songData.ytid, songData.name, songData.length, songData.author, songData.file, songData.name, songData.length, songData.author, songData.file])).rows;
   },
   async findSong(songData) { //TODO better searching!
     var query = "SELECT * FROM `songs` ";

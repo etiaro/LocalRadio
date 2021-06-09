@@ -109,6 +109,19 @@ function downloadSong(ytUrl) {
     xmlHttp.send('{"url": "' + ytUrl + '"}');
     return false;
 }
+function syncSongs() {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("PUT", adress + "player/sync");
+    xmlHttp.setRequestHeader("Content-Type", "application/json");
+    xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
+    xmlHttp.onerror = HANDLEERROR;
+    xmlHttp.onload = () => {
+        if (xmlHttp.status !== 204)
+            HANDLEERROR(xmlHttp.responseText);
+    }
+    xmlHttp.send();
+    return false;
+}
 function deleteSong(ytid) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("POST", adress + "player/delete");
@@ -122,17 +135,17 @@ function deleteSong(ytid) {
     xmlHttp.send(JSON.stringify({ ytid: ytid }));
     return false;
 }
-function playSong(songName, length, ytid) {
+function playSong(fileName, songName, length, ytid){
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("POST", adress + "player/play");
+    xmlHttp.open( "POST", adress+"player/play");
     xmlHttp.setRequestHeader("Content-Type", "application/json");
     xmlHttp.setRequestHeader("x-access-token", loginToken);//add here a cookie
     xmlHttp.onerror = HANDLEERROR;
-    xmlHttp.onload = () => {
-        if (xmlHttp.status !== 200)
+    xmlHttp.onload = ()=>{ 
+        if(xmlHttp.status !== 200)
             HANDLEERROR(xmlHttp.responseText);
-    }
-    xmlHttp.send(JSON.stringify({ songName, length, ytid }));
+     }
+    xmlHttp.send(JSON.stringify({fileName, songName, length, ytid}));
     return false;
 }
 function switchShuffle(play) {
@@ -385,4 +398,4 @@ function notificationHandler(callbackMsg, callbackPlayer, callbackPlaylist, call
     }, 0);
 }
 
-export { getUserData, changePage, login as apiLogin, logout, findSong, getHistory, getSuggestions, suggest, downloadSong, deleteSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData, sendAmpMode, sendVolume };
+export { getUserData, changePage, login as apiLogin, logout, findSong, getHistory, getSuggestions, suggest, downloadSong, syncSongs, deleteSong, playSong, switchShuffle, stopSong, notificationHandler, getPlaylistData, getPlayerData, sendPlaylistData, sendScheduleData, sendAmpMode, sendVolume };

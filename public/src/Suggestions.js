@@ -222,7 +222,7 @@ export default function Suggestions(props) {
       />
                     Odrzucone</p>
       <Button variant="contained" color="primary" onClick={refreshSuggestions}>
-        Odświerz
+        Odśwież
       </Button>
     </Paper>);
 
