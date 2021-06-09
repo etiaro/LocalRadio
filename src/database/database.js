@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 /* eslint-disable import/no-cycle */
 import mysql from 'mysql';
 import ytcore from 'ytdl-core';

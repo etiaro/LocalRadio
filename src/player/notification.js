@@ -60,7 +60,6 @@ export const notification = Object.assign({}, {
   },
   notify(data, adminOnly) {
     this.notID += 1;
-    // eslint-disable-next-line no-param-reassign
     data.notID = this.notID;
     this.notID %= 200000009;
     Object.keys(this.listeners).forEach((id) => {
