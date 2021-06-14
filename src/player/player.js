@@ -192,7 +192,7 @@ export const player = Object.assign({}, {
 		}
 	},
 	deleteSong(ytid) {
-		let filepath = './Music/' + ytid + '.mp3';
+		let filepath = './Music/' + ytid + '.yt.mp3';
 		if (ytid == this.songInfo.ytid)
 			this.stopPlaying(true);
 		database.deleteSong(ytid).then((res) => {
