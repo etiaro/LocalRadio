@@ -192,15 +192,19 @@ export const player = Object.assign({}, {
 		}
 	},
 	deleteSong(ytid) {
-		let filepath = './Music/' + ytid + '.yt.mp3';
 		if (ytid == this.songInfo.ytid)
 			this.stopPlaying(true);
 		database.deleteSong(ytid).then((res) => {
+			let filepath = './Music/' + res.file;
 			if (!fs.existsSync(filepath + '.DOWNLOAD') && !fs.existsSync(filepath + '.TEMP')) try {
 				fs.unlinkSync(filepath);
 				notification.notify({ msg: 'Usunięto ' + res.name, deletedSong: res.name }, true);
 			} catch (err) {
 				notification.notify({ msg: 'Usunięto ' + res.name + ' z bazy danych, jednak nie udało się usunąć pliku mp3', deletedSong: res.name }, true);
+			}
+			else
+			{
+				notification.notify({ msg: 'Plik ' + res.name + ' jest prawdopodobnie pobierany', deletedSong: res.name }, true);
 			}
 		});
 	},
