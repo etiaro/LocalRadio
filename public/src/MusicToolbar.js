@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
@@ -7,20 +7,20 @@ import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import {switchShuffle,stopSong} from './ApiConnection';
-import { Menu as MenuIcon, PlayCircleOutline as PlayIcon, PauseCircleOutline as PauseIcon, LibraryAdd as AddIcon, Shuffle} from '@material-ui/icons';
+import { switchShuffle, stopSong, syncSongs } from './ApiConnection';
+import { Menu as MenuIcon, PlayCircleOutline as PlayIcon, PauseCircleOutline as PauseIcon, Sync, LibraryAdd as AddIcon, Shuffle } from '@material-ui/icons';
 
-function isOverflowing(el){
+function isOverflowing(el) {
     return el.offsetWidth < el.scrollWidth;
 }
 
 const useStyles = makeStyles(theme => ({
-    bar:{
+    bar: {
         position: 'fixed',
         bottom: 0,
         top: 'auto'
     },
-    progressBar:{
+    progressBar: {
         width: "100vw",
         background: "none",
         position: "absolute"
@@ -33,100 +33,102 @@ const useStyles = makeStyles(theme => ({
         position: "relative"
     },
     drawerBtn: {
-        position:"absolute",
+        position: "absolute",
         right: 0
     },
-    addBtn: {
-        position:"absolute",
+    syncBtn: {
+        position: "absolute",
         left: 0
     },
-    playBtn: {
+    addBtn: {
         position: "absolute",
         left: 40
     },
+    playBtn: {
+        position: "absolute",
+        left: 80
+    },
+    stopBtn: {
+        position: "absolute",
+        left: 120
+    },
     shuffleBtn: {
         position: "absolute",
-        left: 80,
+        left: 160,
         color: "gray"
     },
-    scrollable:{
+    scrollable: {
         animation: `$scrollEffect 5000ms infinite linear`,
         width: "fit-content"
     },
     "@keyframes scrollEffect": {
         "0%": {
-        transform: "translateX(100%)"
+            transform: "translateX(100%)"
         },
         "100%": {
-        transform: "translateX(-100%)"
+            transform: "translateX(-100%)"
         }
     },
-    title:{
+    title: {
         position: "absolute",
         padding: 0,
-        left: 120,
+        left: 200,
         width: "fit-content",
         height: "100%",
         display: "flex",
         alignItems: "center",
-        overflow:"hidden",
+        overflow: "hidden",
         whiteSpace: "nowrap",
         maxWidth: "calc(100vw - 160px)"
     },
-    centeredTitle:{
+    centeredTitle: {
         position: "absolute",
         padding: 0,
         width: "fit-content",
         height: "100%",
         display: "flex",
         alignItems: "center",
-        overflow:"hidden",
+        overflow: "hidden",
         whiteSpace: "nowrap",
         maxWidth: "100vw",
-        left:0, 
-        right:0
+        left: 0,
+        right: 0
     },
-    state:{
+    state: {
         position: "absolute",
         marginLeft: 500
     }
-  }));
+}));
 
 export default function MusicToolbar(props) {
     const classes = useStyles();
-    
-    function playClick(){
-        if(!props.playerData.isPlaying){
-            switchShuffle(true);
-        }else{
-            stopSong();
-        }
+
+    function playClick() {
+        switchShuffle(true);
     }
 
-    var playIco;
-    if(props.playerData.isPlaying) 
-        playIco = (<PauseIcon/>);
-    else
-        playIco = (<PlayIcon />);
-    
+    function syncClick() {
+        syncSongs();
+    }
+
     var color = "gray";
-    if(props.playerData.isShuffle)
+    if (props.playerData.isShuffle)
         color = "white";
-    
+
     var [completed, setCompleted] = useState(0);
-    useEffect(()=>{
-        if(!props.playerData.isPlaying) setCompleted(0);
-        else{
+    useEffect(() => {
+        if (!props.playerData.isPlaying) setCompleted(0);
+        else {
             var time = props.playerData.time
-            setCompleted((time / props.playerData.song.length)*100);
-            var timer = setInterval(()=>{
-                time+=0.1;
-                setCompleted((time / props.playerData.song.length)*100);
+            setCompleted((time / props.playerData.song.length) * 100);
+            var timer = setInterval(() => {
+                time += 0.1;
+                setCompleted((time / props.playerData.song.length) * 100);
             }, 100);
         }
-        if(isOverflowing(document.getElementById("titleCont"))){
+        if (isOverflowing(document.getElementById("titleCont"))) {
             document.getElementById("title").classList.add(classes.scrollable);
-        }else{
+        } else {
             document.getElementById("title").classList.remove(classes.scrollable);
         }
         return () => {
@@ -135,27 +137,33 @@ export default function MusicToolbar(props) {
     }, [props.playerData, classes.scrollable]);
 
     var toolbarText = "Radio wyłączone";
-    if(props.playerData.song.name)
+    if (props.playerData.song.name)
         toolbarText = props.playerData.song.name;
 
-    if(props.isAdmin)
+    if (props.isAdmin)
         return (
             <React.Fragment>
                 <AppBar position="fixed" color="primary" className={classes.bar}>
-                    <LinearProgress color="secondary" variant="determinate" value={completed} className={classes.progressBar}/>
+                    <LinearProgress color="secondary" variant="determinate" value={completed} className={classes.progressBar} />
                     <Toolbar className={classes.cont}>
-                    <IconButton edge="start" color="inherit" aria-label="Open drawer" className={classes.drawerBtn} onClick={props.toggleSettings}>
-                        <MenuIcon />
-                    </IconButton>
-                    <IconButton color="inherit" onClick={()=>props.addWindowSwitch()}  className={classes.addBtn} >
-                        <AddIcon />
-                    </IconButton>
-                    <IconButton color="inherit" onClick={()=>playClick()} className={classes.playBtn} >
-                    { playIco }
-                    </IconButton>
-                    <IconButton color="inherit" onClick={()=>switchShuffle()}  className={classes.shuffleBtn} >
-                        <Shuffle style={{color: color}}/>
-                    </IconButton>
+                        <IconButton edge="start" color="inherit" aria-label="Open drawer" className={classes.drawerBtn} onClick={props.toggleSettings}>
+                            <MenuIcon />
+                        </IconButton>
+                        <IconButton color="inherit" onClick={() => props.addWindowSwitch()} className={classes.addBtn} >
+                            <AddIcon />
+                        </IconButton>
+                        <IconButton color="inherit" onClick={() => syncClick()} className={classes.syncBtn} >
+                            <Sync />
+                        </IconButton>
+                        <IconButton color="inherit" onClick={() => playClick()} className={classes.playBtn} >
+                            <PlayIcon />
+                        </IconButton>
+                        <IconButton color="inherit" onClick={stopSong} className={classes.stopBtn} >
+                            <PauseIcon />
+                        </IconButton>
+                        <IconButton color="inherit" onClick={() => switchShuffle()} className={classes.shuffleBtn} >
+                            <Shuffle style={{ color: color }} />
+                        </IconButton>
                     </Toolbar>
                     <Container id="titleCont" className={classes.title}>
                         <Typography id="title" component="h2">
@@ -169,7 +177,7 @@ export default function MusicToolbar(props) {
         return (
             <React.Fragment>
                 <AppBar position="fixed" color="primary" className={classes.bar}>
-                    <LinearProgress color="secondary" variant="determinate" value={completed} className={classes.progressBar}/>
+                    <LinearProgress color="secondary" variant="determinate" value={completed} className={classes.progressBar} />
                     <Toolbar className={classes.cont}>
                     </Toolbar>
                     <Container id="titleCont" className={classes.centeredTitle}>
