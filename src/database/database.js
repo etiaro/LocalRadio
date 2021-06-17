@@ -246,8 +246,8 @@ export const database = Object.assign({}, {
     var inserts = [];
     var inserts2 = [];
     if (sData && sData.userId) {
-      query += "suggestions.userId=" + sData.userId + " AND ";
-      query2 += "suggestions.userId=" + sData.userId + " AND ";
+      query += "suggestions.userId=? AND ";
+      query2 += "suggestions.userId=? AND ";
       inserts.push(sData.userId)
       inserts2.push(sData.userId)
     }
